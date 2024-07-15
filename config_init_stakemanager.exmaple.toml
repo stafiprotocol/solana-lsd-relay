@@ -1,0 +1,12 @@
+
+EndpointList = ["https://api.devnet.solana.com"]
+KeystorePath = "./keys/solana_keys.json"
+
+LsdProgramID = "5N1PkgbPx5Qs3eGaJre16AHsNMRPYM9JSwxXDG83tWX9"
+
+StackAddress = "6jnyhgA2dPWDpw1WqgTaCyjp8otXkP5655DQ6RSnwbv5"
+LsdTokenMintAddress = "6jnyhgA2dPWDpw1WqgTaCyjp8otXkP5655DQ6RSnwbv5"
+ValidatorAddress = "vgcDar2pryHvMgPkKaZfh8pQy4BJxv7SpwUG7zinWjG"
+
+FeePayerAccount = "CCD2dZ17Gse1EEadCznr94bMNyiFsEfAmywwiFuP5G34"
+AdminAccount = "AcHoouLiNg8uxzwrXPSjTKEMfvDmkKpXyU9uGY61QASh"

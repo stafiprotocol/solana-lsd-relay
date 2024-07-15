@@ -1,0 +1,8 @@
+
+EndpointList = ["https://api.devnet.solana.com"]
+KeystorePath = "./keys/solana_keys.json"
+
+LsdProgramID = "5N1PkgbPx5Qs3eGaJre16AHsNMRPYM9JSwxXDG83tWX9"
+
+FeePayerAccount = "CCD2dZ17Gse1EEadCznr94bMNyiFsEfAmywwiFuP5G34"
+AdminAccount = "AcHoouLiNg8uxzwrXPSjTKEMfvDmkKpXyU9uGY61QASh"
