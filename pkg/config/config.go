@@ -19,8 +19,9 @@ type ConfigInitStakeManager struct {
 	LsdTokenMintAddress string
 	ValidatorAddress    string
 
-	FeePayerAccount string
-	AdminAccount    string
+	FeePayerAccount     string
+	AdminAccount        string
+	StakeManagerAccount string
 
 	// setting
 	AddValidatorAddress    string

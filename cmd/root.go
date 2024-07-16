@@ -14,6 +14,8 @@ var (
 const (
 	flagLogLevel     = "log_level"
 	flagConfigPath   = "config"
+	flagStakeManager = "stake_manager"
+	flagLsdProgramID = "lsd_program_id"
 	flagKeystorePath = "keystore_path"
 
 	defaultKeystorePath = "./keys/solana_keys.json"
@@ -50,8 +52,9 @@ func keysCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		vaultAddCmd(),
 		vaultCreateCmd(),
+		vaultImportCmd(),
+		vaultGenCmd(),
 		vaultExportCmd(),
 		vaultListCmd(),
 	)
@@ -66,6 +69,7 @@ func stakeManagerCmd() *cobra.Command {
 
 	cmd.AddCommand(
 		stakeManagerInitCmd(),
+		getStakePoolCmd(),
 		stakeManagerSetRateLimitCmd(),
 		stakeManagerSetUnbondingDurationCmd(),
 		stakeManagerAddValidator(),

@@ -69,7 +69,7 @@ func stackInitCmd() *cobra.Command {
 			fmt.Println("lsdProgramID:", lsdProgramID.ToBase58())
 			fmt.Println("admin", adminAccount.PublicKey.ToBase58())
 			fmt.Println("feePayer:", feePayerAccount.PublicKey.ToBase58())
-			fmt.Println("stack:", stackAccount.PublicKey.ToBase58())
+			fmt.Println("stack(randomly generated):", stackAccount.PublicKey.ToBase58())
 		Out:
 			for {
 				fmt.Println("\ncheck account info, then press (y/n) to continue:")
@@ -102,7 +102,7 @@ func stackInitCmd() *cobra.Command {
 						adminAccount.PublicKey,
 					),
 				},
-				Signers:         []types.Account{feePayerAccount, adminAccount},
+				Signers:         []types.Account{feePayerAccount, adminAccount, stackAccount},
 				FeePayer:        feePayerAccount.PublicKey,
 				RecentBlockHash: res.Blockhash,
 			})
@@ -118,7 +118,7 @@ func stackInitCmd() *cobra.Command {
 
 			retry := 0
 			for {
-				if retry > 60 {
+				if retry > 30 {
 					return fmt.Errorf("tx %s failed", txHash)
 				}
 				_, err := c.GetAccountInfo(context.Background(), stackAccount.PublicKey.ToBase58(), client.GetAccountInfoConfig{

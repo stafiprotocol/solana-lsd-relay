@@ -43,3 +43,5 @@ log_data/
 conf_dev.*
 conf_main.*
 config_start.toml
+config_init_stack.toml
+config_init_stakemanager.toml

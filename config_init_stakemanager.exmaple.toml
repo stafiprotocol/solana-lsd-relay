@@ -2,11 +2,12 @@
 EndpointList = ["https://api.devnet.solana.com"]
 KeystorePath = "./keys/solana_keys.json"
 
-LsdProgramID = "5N1PkgbPx5Qs3eGaJre16AHsNMRPYM9JSwxXDG83tWX9"
+LsdProgramID = "795MBfkwwtAX4fWiFqZcJK8D91P9tqqtiSRrSNhBvGzq"
 
-StackAddress = "6jnyhgA2dPWDpw1WqgTaCyjp8otXkP5655DQ6RSnwbv5"
-LsdTokenMintAddress = "6jnyhgA2dPWDpw1WqgTaCyjp8otXkP5655DQ6RSnwbv5"
+StackAddress = "EpgquacesXp8h7nk9j5KcnzDVATFKLE995cuhj1hRbpR"
+LsdTokenMintAddress = "5ktkCCpeFHn2AD69yAUwPpUWBJpuva8gmBuU6BXFyapp"
 ValidatorAddress = "vgcDar2pryHvMgPkKaZfh8pQy4BJxv7SpwUG7zinWjG"
 
-FeePayerAccount = "CCD2dZ17Gse1EEadCznr94bMNyiFsEfAmywwiFuP5G34"
-AdminAccount = "AcHoouLiNg8uxzwrXPSjTKEMfvDmkKpXyU9uGY61QASh"
+FeePayerAccount = "ErCsmTQhM9qt17ce8XDTasKo76FEdg2scP2UX4VLxKDb"
+AdminAccount = "GgAy6GnqaPJUdGfCQGMgW2fGMMvmxc3E7a2oizFuCbhF"
+StakeManagerAccount = "HzmbG6fL6mgBoTErJbtuNVkUh2dKfvkUSLtPPtHytXN6"

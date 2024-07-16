@@ -39,7 +39,7 @@ func (task *Task) EraUpdataRate(stakeManagerAddr common.PublicKey) error {
 		return err
 	}
 
-	stackFeeAccount, _, err := common.FindProgramAddress([][]byte{stakeManagerAddr.Bytes(), stakeManager.LsdTokenMint.Bytes()}, task.lsdProgramID)
+	stackFeeAccount, _, err := common.FindProgramAddress([][]byte{task.stackAccountPubkey.Bytes(), stakeManager.LsdTokenMint.Bytes()}, task.lsdProgramID)
 	if err != nil {
 		return err
 	}

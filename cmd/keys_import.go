@@ -21,10 +21,10 @@ import (
 	"github.com/stafiprotocol/solana-lsd-relay/pkg/vault"
 )
 
-func vaultAddCmd() *cobra.Command {
+func vaultImportCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add",
-		Short: "Add private keys to an existing vault taking input from the shell",
+		Use:   "import",
+		Short: "Import private keys to an existing vault taking input from the shell",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			walletFile, err := cmd.Flags().GetString(flagKeystorePath)
