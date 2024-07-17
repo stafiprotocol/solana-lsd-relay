@@ -118,7 +118,7 @@ func stackInitCmd() *cobra.Command {
 
 			retry := 0
 			for {
-				if retry > 30 {
+				if retry > 60 {
 					return fmt.Errorf("tx %s failed", txHash)
 				}
 				_, err := c.GetAccountInfo(context.Background(), stackAccount.PublicKey.ToBase58(), client.GetAccountInfoConfig{

@@ -12,7 +12,7 @@ import (
 )
 
 func (task *Task) EraUpdataActive(stakeManagerAddr common.PublicKey) error {
-	stakeManager, err := task.client.GetLsdStakeManager(context.Background(), task.cfg.StakeManagerAddress)
+	stakeManager, err := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
 	if err != nil {
 		return err
 	}
@@ -61,7 +61,7 @@ func (task *Task) EraUpdataActive(stakeManagerAddr common.PublicKey) error {
 		txHash, stakeAccount.ToBase58(), stakeAccountInfo.StakeAccount.Info.Stake.Delegation.Stake, eraActive, eraProcessActive, int64(eraProcessActive)+stakeAccountInfo.StakeAccount.Info.Stake.Delegation.Stake)
 
 	if err := task.waitTx(txHash); err != nil {
-		stakeManagerNew, err := task.client.GetLsdStakeManager(context.Background(), task.cfg.StakeManagerAddress)
+		stakeManagerNew, err := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
 		if err != nil {
 			return err
 		}

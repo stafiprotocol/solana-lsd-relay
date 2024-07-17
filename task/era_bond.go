@@ -62,7 +62,7 @@ func (task *Task) EraBond(stakeManagerAddr common.PublicKey) error {
 	logrus.Infof("EraBond send tx hash: %s, stakeAccount: %s, bond: %d",
 		txHash, stakeAccount.PublicKey.ToBase58(), stakeManager.EraProcessData.NeedBond)
 	if err := task.waitTx(txHash); err != nil {
-		stakeManagerNew, err := task.client.GetLsdStakeManager(context.Background(), task.cfg.StakeManagerAddress)
+		stakeManagerNew, err := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
 		if err != nil {
 			return err
 		}

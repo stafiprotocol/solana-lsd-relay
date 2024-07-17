@@ -12,7 +12,7 @@ import (
 )
 
 func (task *Task) EraWithdraw(stakeManagerAddr common.PublicKey) error {
-	stakeManager, err := task.client.GetLsdStakeManager(context.Background(), task.cfg.StakeManagerAddress)
+	stakeManager, err := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
 	if err != nil {
 		return err
 	}

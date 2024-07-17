@@ -12,7 +12,7 @@ import (
 )
 
 func (task *Task) EraMerge(stakeManagerAddr common.PublicKey) error {
-	stakeManager, err := task.client.GetLsdStakeManager(context.Background(), task.cfg.StakeManagerAddress)
+	stakeManager, err := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
 	if err != nil {
 		return err
 	}
@@ -93,7 +93,7 @@ func (task *Task) EraMerge(stakeManagerAddr common.PublicKey) error {
 			logrus.Infof("EraMerge send tx hash: %s, srcStakeAccount: %s, dstStakeAccount: %s",
 				txHash, srcStakeAccount.ToBase58(), dstStakeAccount.ToBase58())
 			if err := task.waitTx(txHash); err != nil {
-				stakeManagerNew, err := task.client.GetLsdStakeManager(context.Background(), task.cfg.StakeManagerAddress)
+				stakeManagerNew, err := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
 				if err != nil {
 					return err
 				}

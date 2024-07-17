@@ -8,7 +8,7 @@ require (
 	github.com/mr-tron/base58 v1.2.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.7.0
-	github.com/stafiprotocol/solana-go-sdk v1.4.10
+	github.com/stafiprotocol/solana-go-sdk v1.6.0
 	golang.org/x/crypto v0.16.0
 	golang.org/x/term v0.15.0
 )
@@ -38,5 +38,3 @@ require (
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect
 )
-
-replace github.com/stafiprotocol/solana-go-sdk => /Users/tpkeeper/gowork/stafi/solana-go-sdk

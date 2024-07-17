@@ -26,8 +26,10 @@ type Task struct {
 
 	lsdProgramID       common.PublicKey
 	stackAccountPubkey common.PublicKey
+	stakeManagerPubkey common.PublicKey
 
 	feePayerAccount types.Account
+	entrustedMode   bool
 
 	client   *client.Client
 	handlers []Handler
@@ -40,9 +42,10 @@ type Handler struct {
 
 func NewTask(cfg config.ConfigStart, accouts map[string]types.Account) *Task {
 	s := &Task{
-		stop:        make(chan struct{}),
-		cfg:         cfg,
-		accountsMap: accouts,
+		stop:          make(chan struct{}),
+		cfg:           cfg,
+		accountsMap:   accouts,
+		entrustedMode: true,
 	}
 	return s
 }
@@ -61,6 +64,10 @@ func (task *Task) Start() error {
 	task.lsdProgramID = lsdProgramID
 	task.stackAccountPubkey = stackAccountPubkey
 	task.feePayerAccount = feePayerAccount
+	if len(task.cfg.StakeManagerAddress) > 0 {
+		task.stakeManagerPubkey = common.PublicKeyFromString(task.cfg.StakeManagerAddress)
+		task.entrustedMode = false
+	}
 
 	task.appendHandlers(task.EraNew, task.EraBond, task.EraUnbond, task.EraUpdataActive, task.EraUpdataRate, task.EraMerge, task.EraWithdraw)
 	SafeGoWithRestart(task.handler)
@@ -78,6 +85,8 @@ func (s *Task) appendHandlers(handlers ...func(common.PublicKey) error) {
 
 		splits := strings.Split(funcNameRaw, "/")
 		funcName := splits[len(splits)-1]
+		funcName = strings.Split(funcName, ".")[2]
+		funcName = strings.Split(funcName, "-")[0]
 
 		s.handlers = append(s.handlers, Handler{
 			method: handler,
@@ -116,16 +125,28 @@ func (s *Task) handler() {
 }
 
 func (t *Task) handleEra() error {
-	stackAccount, err := t.client.GetLsdStack(context.Background(), t.stackAccountPubkey.ToBase58())
-	if err != nil {
-		return err
-	}
+	if t.entrustedMode {
+		stackAccount, err := t.client.GetLsdStack(context.Background(), t.stackAccountPubkey.ToBase58())
+		if err != nil {
+			return err
+		}
 
-	for _, stakeManager := range stackAccount.EntrustedStakeManagers {
+		for _, stakeManager := range stackAccount.EntrustedStakeManagers {
+			for _, handler := range t.handlers {
+				funcName := handler.name
+				logrus.Debugf("stakeManager: %s, handler %s start...", stakeManager.ToBase58(), funcName)
+				err := handler.method(stakeManager)
+				if err != nil {
+					return fmt.Errorf("handler %s failed: %s, will retry", funcName, err)
+				}
+				logrus.Debugf("stakeManager: %s, handler %s end", stakeManager.ToBase58(), funcName)
+			}
+		}
+	} else {
 		for _, handler := range t.handlers {
 			funcName := handler.name
 			logrus.Debugf("handler %s start...", funcName)
-			err := handler.method(stakeManager)
+			err := handler.method(t.stakeManagerPubkey)
 			if err != nil {
 				return fmt.Errorf("handler %s failed: %s, will retry", funcName, err)
 			}

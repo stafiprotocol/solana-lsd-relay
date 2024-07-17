@@ -2,7 +2,7 @@
 EndpointList = ["https://api.devnet.solana.com"]
 KeystorePath = "./keys/solana_keys.json"
 
-LsdProgramID = "5N1PkgbPx5Qs3eGaJre16AHsNMRPYM9JSwxXDG83tWX9"
+LsdProgramID = "795MBfkwwtAX4fWiFqZcJK8D91P9tqqtiSRrSNhBvGzq"
 
-FeePayerAccount = "CCD2dZ17Gse1EEadCznr94bMNyiFsEfAmywwiFuP5G34"
-AdminAccount = "AcHoouLiNg8uxzwrXPSjTKEMfvDmkKpXyU9uGY61QASh"
+FeePayerAccount = "ErCsmTQhM9qt17ce8XDTasKo76FEdg2scP2UX4VLxKDb"
+AdminAccount = "GgAy6GnqaPJUdGfCQGMgW2fGMMvmxc3E7a2oizFuCbhF"

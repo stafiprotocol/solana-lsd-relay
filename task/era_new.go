@@ -12,19 +12,22 @@ import (
 )
 
 func (task *Task) EraNew(stakeManagerAddr common.PublicKey) error {
+	fmt.Printf("0")
 	epochInfo, err := task.client.GetEpochInfo(context.Background(), client.CommitmentFinalized)
 	if err != nil {
 		return err
 	}
-	stakeManager, err := task.client.GetLsdStakeManager(context.Background(), task.cfg.StakeManagerAddress)
+	fmt.Printf("1")
+	stakeManager, err := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
 	if err != nil {
 		return err
 	}
-
+	fmt.Printf("2")
 	if stakeManager.LatestEra >= uint64(epochInfo.Epoch) {
 		return nil
 	}
 
+	fmt.Printf("3")
 	if !isEmpty(&stakeManager.EraProcessData) {
 		return nil
 	}
@@ -57,7 +60,7 @@ func (task *Task) EraNew(stakeManagerAddr common.PublicKey) error {
 
 	logrus.Infof("EraNew send tx hash: %s, newEra: %d", txHash, stakeManager.LatestEra+1)
 	if err := task.waitTx(txHash); err != nil {
-		stakeManagerNew, err := task.client.GetLsdStakeManager(context.Background(), task.cfg.StakeManagerAddress)
+		stakeManagerNew, err := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
 		if err != nil {
 			return err
 		}

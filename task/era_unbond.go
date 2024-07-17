@@ -12,7 +12,7 @@ import (
 )
 
 func (task *Task) EraUnbond(stakeManagerAddr common.PublicKey) error {
-	stakeManager, err := task.client.GetLsdStakeManager(context.Background(), task.cfg.StakeManagerAddress)
+	stakeManager, err := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
 	if err != nil {
 		return err
 	}
@@ -69,7 +69,7 @@ func (task *Task) EraUnbond(stakeManagerAddr common.PublicKey) error {
 	logrus.Infof("EraUnbond send tx hash: %s, splitStakeAccount: %s, unbond: %d",
 		txHash, splitStakeAccount.PublicKey.ToBase58(), stakeManager.EraProcessData.NeedBond)
 	if err := task.waitTx(txHash); err != nil {
-		stakeManagerNew, err := task.client.GetLsdStakeManager(context.Background(), task.cfg.StakeManagerAddress)
+		stakeManagerNew, err := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
 		if err != nil {
 			return err
 		}
