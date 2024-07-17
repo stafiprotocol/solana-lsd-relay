@@ -14,7 +14,8 @@ var (
 const (
 	flagLogLevel     = "log_level"
 	flagConfigPath   = "config"
-	flagStakeManager = "stake_manager"
+	flagFeePayer     = "fee_payer"
+	flagEndPoint     = "endpoint"
 	flagLsdProgramID = "lsd_program_id"
 	flagKeystorePath = "keystore_path"
 
@@ -69,7 +70,7 @@ func stakeManagerCmd() *cobra.Command {
 
 	cmd.AddCommand(
 		stakeManagerInitCmd(),
-		getStakePoolCmd(),
+		nextStakeManagerCmd(),
 		stakeManagerSetRateLimitCmd(),
 		stakeManagerSetUnbondingDurationCmd(),
 		stakeManagerAddValidator(),

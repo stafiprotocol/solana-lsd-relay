@@ -7,4 +7,5 @@ LsdProgramID = "795MBfkwwtAX4fWiFqZcJK8D91P9tqqtiSRrSNhBvGzq"
 StackAddress = "EpgquacesXp8h7nk9j5KcnzDVATFKLE995cuhj1hRbpR"
 StakeManagerAddress = "6g8ziuefcXnmP1kmCXd7CGxdQrL59CkdnH9C6vQnQYkp" # entrusted mode if empty
 
+## signers
 FeePayerAccount = "ErCsmTQhM9qt17ce8XDTasKo76FEdg2scP2UX4VLxKDb"

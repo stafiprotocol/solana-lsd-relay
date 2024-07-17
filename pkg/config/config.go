@@ -18,15 +18,14 @@ type ConfigInitStakeManager struct {
 	StackAddress        string
 	LsdTokenMintAddress string
 	ValidatorAddress    string
+	StakeManagerAddress string
 
-	FeePayerAccount     string
-	AdminAccount        string
-	StakeManagerAccount string
+	FeePayerAccount string
+	AdminAccount    string
 
 	// setting
 	AddValidatorAddress    string
 	RemoveValidatorAddress string
-	StakeManagerAddress    string
 	RateChangeLimit        uint64
 	UnbondingDuration      uint64
 }

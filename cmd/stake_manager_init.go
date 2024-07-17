@@ -16,6 +16,7 @@ import (
 )
 
 var stakePoolSeed = []byte("pool_seed")
+var stakeManagerSeed = "stake_manager_seed_%d"
 
 func stakeManagerInitCmd() *cobra.Command {
 
@@ -77,16 +78,32 @@ func stakeManagerInitCmd() *cobra.Command {
 				return fmt.Errorf("admin not exit in vault")
 			}
 
-			stakeManagerAccount, exist := accountMap[cfg.StakeManagerAccount]
-			if !exist {
-				return fmt.Errorf("stake manager not exit in vault")
+			var stakeManagerPubkey common.PublicKey
+			var seed string
+			for i := 0; ; i++ {
+				seed = fmt.Sprintf(stakeManagerSeed, i)
+				stakeManagerPubkey = common.CreateWithSeed(feePayerAccount.PublicKey, seed, lsdProgramID)
+				_, err := c.GetAccountInfo(context.Background(), stakeManagerPubkey.ToBase58(), client.GetAccountInfoConfig{
+					Encoding:  client.GetAccountInfoConfigEncodingBase64,
+					DataSlice: client.GetAccountInfoConfigDataSlice{},
+				})
+				if err != nil {
+					if err == client.ErrAccountNotFound {
+						break
+					} else {
+						return err
+					}
+				}
+			}
+			if cfg.StakeManagerAddress != stakeManagerPubkey.ToBase58() {
+				return fmt.Errorf("stake manager not match: cfg: %s, gen: %s", cfg.StakeManagerAddress, stakeManagerPubkey.ToBase58())
 			}
 
 			stackFeeAccountPubkey, _, err := common.FindProgramAddress([][]byte{stackPubkey.Bytes(), lsdTokenMintPubkey.Bytes()}, lsdProgramID)
 			if err != nil {
 				return err
 			}
-			stakePool, _, err := common.FindProgramAddress([][]byte{stakeManagerAccount.PublicKey.Bytes(), stakePoolSeed}, lsdProgramID)
+			stakePool, _, err := common.FindProgramAddress([][]byte{stakeManagerPubkey.Bytes(), stakePoolSeed}, lsdProgramID)
 			if err != nil {
 				return err
 			}
@@ -104,7 +121,7 @@ func stakeManagerInitCmd() *cobra.Command {
 			fmt.Println("lsdProgramID:", lsdProgramID.ToBase58())
 			fmt.Println("stack:", stackPubkey.ToBase58())
 			fmt.Println("lsdTokenMint:", lsdTokenMintPubkey.ToBase58())
-			fmt.Println("stakeManager:", stakeManagerAccount.PublicKey.ToBase58())
+			fmt.Println("stakeManager:", stakeManagerPubkey.ToBase58())
 			fmt.Println("stakePool:", stakePool.ToBase58())
 			fmt.Println("stackFeeAccount(determinately generated):", stackFeeAccountPubkey.ToBase58())
 			fmt.Println("admin", adminAccount.PublicKey.ToBase58())
@@ -134,16 +151,18 @@ func stakeManagerInitCmd() *cobra.Command {
 						stakePool,
 						stakePoolRent,
 					),
-					sysprog.CreateAccount(
+					sysprog.CreateAccountWithSeed(
 						feePayerAccount.PublicKey,
-						stakeManagerAccount.PublicKey,
+						stakeManagerPubkey,
+						feePayerAccount.PublicKey,
 						lsdProgramID,
+						seed,
 						stakeManagerRent,
 						lsdprog.StakeManagerAccountLengthDefault,
 					),
 					lsdprog.InitializeStakeManager(
 						lsdProgramID,
-						stakeManagerAccount.PublicKey,
+						stakeManagerPubkey,
 						stackPubkey,
 						stakePool,
 						stackFeeAccountPubkey,
@@ -153,7 +172,7 @@ func stakeManagerInitCmd() *cobra.Command {
 						adminAccount.PublicKey,
 					),
 				},
-				Signers:         []types.Account{feePayerAccount, stakeManagerAccount, adminAccount},
+				Signers:         []types.Account{feePayerAccount, adminAccount},
 				FeePayer:        feePayerAccount.PublicKey,
 				RecentBlockHash: res.Blockhash,
 			})
@@ -172,7 +191,7 @@ func stakeManagerInitCmd() *cobra.Command {
 				if retry > 60 {
 					return fmt.Errorf("tx %s failed", txHash)
 				}
-				_, err = c.GetAccountInfo(context.Background(), stakeManagerAccount.PublicKey.ToBase58(), client.GetAccountInfoConfig{
+				_, err = c.GetAccountInfo(context.Background(), stakeManagerPubkey.ToBase58(), client.GetAccountInfoConfig{
 					Encoding:  client.GetAccountInfoConfigEncodingBase64,
 					DataSlice: client.GetAccountInfoConfigDataSlice{},
 				})
