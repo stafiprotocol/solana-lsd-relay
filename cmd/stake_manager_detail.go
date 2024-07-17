@@ -7,6 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/stafiprotocol/solana-go-sdk/client"
+	"github.com/stafiprotocol/solana-go-sdk/common"
+	"github.com/stafiprotocol/solana-go-sdk/lsdprog"
 )
 
 func stakeManagerDetailCmd() *cobra.Command {
@@ -21,14 +23,32 @@ func stakeManagerDetailCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+
+			stakeManagerPubkey := common.PublicKeyFromString(stakeManager)
+
 			endpoint, err := cmd.Flags().GetString(flagEndPoint)
 			if err != nil {
 				return err
 			}
 
 			c := client.NewClient([]string{endpoint})
-
+			accountInfo, err := c.GetAccountInfo(context.Background(), stakeManager, client.GetAccountInfoConfig{
+				Encoding: client.GetAccountInfoConfigEncodingBase64,
+				DataSlice: client.GetAccountInfoConfigDataSlice{
+					Offset: 0,
+					Length: lsdprog.StakeManagerAccountLengthDefault,
+				},
+			})
+			if err != nil {
+				return err
+			}
 			stakeManagerDetail, err := c.GetLsdStakeManager(context.Background(), stakeManager)
+			if err != nil {
+				return err
+			}
+
+			programId := common.PublicKeyFromString(accountInfo.Owner)
+			stakePool, _, err := common.FindProgramAddress([][]byte{stakeManagerPubkey.Bytes(), stakePoolSeed}, programId)
 			if err != nil {
 				return err
 			}
@@ -37,7 +57,9 @@ func stakeManagerDetailCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			fmt.Println(string(jsonBts))
+
+			fmt.Printf("stakeManager: \n%s\n", string(jsonBts))
+			fmt.Printf("stakePool: \n%s\n", stakePool.ToBase58())
 			return nil
 		},
 	}

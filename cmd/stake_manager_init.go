@@ -96,7 +96,7 @@ func stakeManagerInitCmd() *cobra.Command {
 				}
 			}
 			if cfg.StakeManagerAddress != stakeManagerPubkey.ToBase58() {
-				return fmt.Errorf("stake manager not match: cfg: %s, gen: %s", cfg.StakeManagerAddress, stakeManagerPubkey.ToBase58())
+				return fmt.Errorf("stake manager not match: cfg: %s, avaiable create stake manager: %s", cfg.StakeManagerAddress, stakeManagerPubkey.ToBase58())
 			}
 
 			stackFeeAccountPubkey, _, err := common.FindProgramAddress([][]byte{stackPubkey.Bytes(), lsdTokenMintPubkey.Bytes()}, lsdProgramID)
