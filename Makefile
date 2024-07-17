@@ -16,6 +16,11 @@ build:
 	@echo " > \033[32mBuilding ssv-client...\033[0m "
 	go build -mod readonly $(BUILD_FLAGS) -o build/solana-lsd-relay main.go
 
+install: 
+	@echo " > \033[32mInstalling solana-lsd-relay...\033[0m "
+	go install -mod readonly $(BUILD_FLAGS) ./...
+
+
 build-linux:
 	@GOOS=linux GOARCH=amd64 go build --mod readonly $(BUILD_FLAGS) -o ./build/solana-lsd-relay main.go
 
