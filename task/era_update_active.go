@@ -12,6 +12,7 @@ import (
 )
 
 func (task *Task) EraUpdateActive(stakeManagerAddr common.PublicKey) error {
+	for {
 	stakeManager, err := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
 	if err != nil {
 		return err
@@ -76,5 +77,5 @@ func (task *Task) EraUpdateActive(stakeManagerAddr common.PublicKey) error {
 	}
 
 	logrus.Info("EraUpdateActive success")
-	return nil
+	}
 }
