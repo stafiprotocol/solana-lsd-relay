@@ -69,7 +69,7 @@ func (task *Task) Start() error {
 		task.entrustedMode = false
 	}
 
-	task.appendHandlers(task.EraNew, task.EraBond, task.EraUnbond, task.EraUpdataActive, task.EraUpdataRate, task.EraMerge, task.EraWithdraw)
+	task.appendHandlers(task.EraNew, task.EraBond, task.EraUnbond, task.EraUpdateActive, task.EraUpdateRate, task.EraMerge, task.EraWithdraw)
 	SafeGoWithRestart(task.handler)
 	return nil
 }
@@ -167,11 +167,11 @@ func needUnbond(data *lsdprog.EraProcessData) bool {
 	return data.NeedUnbond > 0
 }
 
-func needUpdataActive(data *lsdprog.EraProcessData) bool {
+func needUpdateActive(data *lsdprog.EraProcessData) bool {
 	return data.NeedUnbond == 0 && data.NeedBond == 0 && len(data.PendingStakeAccounts) > 0
 }
 
-func needUpdataRate(data *lsdprog.EraProcessData) bool {
+func needUpdateRate(data *lsdprog.EraProcessData) bool {
 	return data.NeedUnbond == 0 && data.NeedBond == 0 && len(data.PendingStakeAccounts) == 0 && data.NewActive != 0 && data.OldActive != 0
 }
 

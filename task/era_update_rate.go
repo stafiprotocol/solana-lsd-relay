@@ -12,13 +12,13 @@ import (
 	"github.com/stafiprotocol/solana-go-sdk/types"
 )
 
-func (task *Task) EraUpdataRate(stakeManagerAddr common.PublicKey) error {
+func (task *Task) EraUpdateRate(stakeManagerAddr common.PublicKey) error {
 	stakeManager, err := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
 	if err != nil {
 		return err
 	}
 
-	if !needUpdataRate(&stakeManager.EraProcessData) {
+	if !needUpdateRate(&stakeManager.EraProcessData) {
 		return nil
 	}
 	stackAccount, err := task.client.GetLsdStack(context.Background(), task.stackAccountPubkey.ToBase58())
@@ -113,7 +113,7 @@ func (task *Task) EraUpdataRate(stakeManagerAddr common.PublicKey) error {
 			return err
 		}
 
-		if !needUpdataRate(&stakeManagerNew.EraProcessData) {
+		if !needUpdateRate(&stakeManagerNew.EraProcessData) {
 			logrus.Infof("EraUpdateRate success, rate(new): %d", stakeManagerNew.Rate)
 			return nil
 		}
