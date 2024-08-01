@@ -13,7 +13,7 @@ get:
 	go mod tidy && go mod download
 
 build:
-	@echo " > \033[32mBuilding ssv-client...\033[0m "
+	@echo " > \033[32mBuilding solana-lsd-relay...\033[0m "
 	go build -mod readonly $(BUILD_FLAGS) -o build/solana-lsd-relay main.go
 
 install: 
