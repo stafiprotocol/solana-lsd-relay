@@ -32,7 +32,7 @@ you cannot trust that these public keys have their counterpart in the
 wallet, unless you check with the "list" command.
 `,
 		Run: func(cmd *cobra.Command, args []string) {
-			vault := vault.MustGetWallet(cmd)
+			vault, _ := vault.MustGetWallet(cmd, false)
 
 			vault.PrintPublicKeys()
 		},

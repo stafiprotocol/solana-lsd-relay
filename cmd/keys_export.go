@@ -25,7 +25,7 @@ func vaultExportCmd() *cobra.Command {
 		Use:   "export",
 		Short: "Export private keys (and corresponding public keys) inside a Solana vault.",
 		Run: func(cmd *cobra.Command, args []string) {
-			vault := vault.MustGetWallet(cmd)
+			vault, _ := vault.MustGetWallet(cmd, false)
 
 			vault.PrintPrivateKeys()
 		},
