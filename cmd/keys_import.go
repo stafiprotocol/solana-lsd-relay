@@ -24,39 +24,26 @@ import (
 func vaultImportCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "import",
-		Short: "Import private keys to an existing vault taking input from the shell",
+		Short: "Import private keys taking input from the shell",
 		RunE: func(cmd *cobra.Command, args []string) error {
-
 			walletFile, err := cmd.Flags().GetString(flagKeystorePath)
 			if err != nil {
 				return err
 			}
 
-			fmt.Println("Loading existing vault from file:", walletFile)
-			v, err := vault.NewVaultFromWalletFile(walletFile)
-			if err != nil {
-				fmt.Printf("unable to load vault file: %s", err)
-				return err
+			v, boxer := vault.MustGetWallet(cmd, true)
+			if len(v.KeyBag) > 0 {
+				v.PrintPublicKeys()
 			}
-
-			boxer, err := vault.SecretBoxerForType(v.SecretBoxWrap)
-			if err != nil {
-				fmt.Printf("unable to intiate boxer: %s", err)
-				return err
-			}
-
-			err = v.Open(boxer)
-			if err != nil {
-				fmt.Printf("unable to open vault: %s", err)
-				return err
-			}
-
-			v.PrintPublicKeys()
 
 			privateKeys, err := capturePrivateKeys()
 			if err != nil {
 				fmt.Printf("failed to enter private keys: %s", err)
 				return err
+			}
+			if len(privateKeys) == 0 {
+				fmt.Println("quit: no private keys")
+				return nil
 			}
 
 			var newKeys []vault.PublicKey
@@ -65,8 +52,7 @@ func vaultImportCmd() *cobra.Command {
 				newKeys = append(newKeys, privateKey.PublicKey())
 			}
 
-			err = v.Seal(boxer)
-			if err != nil {
+			if err = v.Seal(vault.CreateBoxerIfNeeded(boxer)); err != nil {
 				fmt.Printf("failed to seal vault: %s", err)
 				return err
 			}
@@ -77,7 +63,7 @@ func vaultImportCmd() *cobra.Command {
 				return err
 			}
 
-			vaultWrittenReport(walletFile, newKeys, len(v.KeyBag))
+			vault.WrittenReport(walletFile, newKeys, len(v.KeyBag))
 			return nil
 		},
 	}
@@ -132,15 +118,4 @@ func capturePrivateKey(isFirst bool) (privateKey vault.PrivateKey, err error) {
 	fmt.Printf("- Scanned private key corresponding to %s\n", key.PublicKey().String())
 
 	return key, nil
-}
-
-func vaultWrittenReport(walletFile string, newKeys []vault.PublicKey, totalKeys int) {
-	fmt.Println("")
-	fmt.Printf("Wallet file %q written to disk.\n", walletFile)
-	fmt.Println("Here are the keys that were ADDED during this operation (use `list` to see them all):")
-	for _, pub := range newKeys {
-		fmt.Printf("- %s\n", pub.String())
-	}
-
-	fmt.Printf("Total keys stored: %d\n", totalKeys)
 }

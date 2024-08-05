@@ -24,7 +24,7 @@ import (
 func vaultGenCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "gen",
-		Short: "Gen new keys to an existing vault",
+		Short: "Gen new keys",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			numKeys, err := cmd.Flags().GetInt("keys")
 			if err != nil {
@@ -40,26 +40,10 @@ func vaultGenCmd() *cobra.Command {
 				return err
 			}
 
-			fmt.Println("Loading existing vault from file:", walletFile)
-			v, err := vault.NewVaultFromWalletFile(walletFile)
-			if err != nil {
-				fmt.Printf("unable to load vault file: %s", err)
-				return err
+			v, boxer := vault.MustGetWallet(cmd, true)
+			if len(v.KeyBag) > 0 {
+				v.PrintPublicKeys()
 			}
-
-			boxer, err := vault.SecretBoxerForType(v.SecretBoxWrap)
-			if err != nil {
-				fmt.Printf("unable to intiate boxer: %s", err)
-				return err
-			}
-
-			err = v.Open(boxer)
-			if err != nil {
-				fmt.Printf("unable to open vault: %s", err)
-				return err
-			}
-
-			v.PrintPublicKeys()
 
 			privateKeys := make([]vault.PrivateKey, 0)
 			for i := 0; i < numKeys; i++ {
@@ -69,7 +53,6 @@ func vaultGenCmd() *cobra.Command {
 				}
 				privateKeys = append(privateKeys, privKey)
 			}
-			fmt.Printf("Created %d keys. They will be shown when encrypted and written to disk successfully.\n", len(privateKeys))
 
 			var newKeys []vault.PublicKey
 			for _, privateKey := range privateKeys {
@@ -77,9 +60,8 @@ func vaultGenCmd() *cobra.Command {
 				newKeys = append(newKeys, privateKey.PublicKey())
 			}
 
-			err = v.Seal(boxer)
-			if err != nil {
-				fmt.Printf("failed to seal vault: %s", err)
+			if err = v.Seal(vault.CreateBoxerIfNeeded(boxer)); err != nil {
+				fmt.Printf("seal err: %s", err)
 				return err
 			}
 
@@ -89,7 +71,7 @@ func vaultGenCmd() *cobra.Command {
 				return err
 			}
 
-			vaultWrittenReport(walletFile, newKeys, len(v.KeyBag))
+			vault.WrittenReport(walletFile, newKeys, len(v.KeyBag))
 			return nil
 		},
 	}

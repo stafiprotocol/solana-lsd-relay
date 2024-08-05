@@ -54,7 +54,6 @@ func keysCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		vaultCreateCmd(),
 		vaultImportCmd(),
 		vaultGenCmd(),
 		vaultExportCmd(),

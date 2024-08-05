@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -43,39 +44,65 @@ func errorCheck(prefix string, err error) {
 		os.Exit(1)
 	}
 }
-func MustGetWallet(cmd *cobra.Command) *Vault {
-	vault, err := setupWallet(cmd)
-	errorCheck("wallet setup", err)
-	return vault
+
+func MustGetWallet(cmd *cobra.Command, create bool) (*Vault, SecretBoxer) {
+	if create {
+		walletFile, err := cmd.Flags().GetString("keystore_path")
+		if err != nil {
+			errorCheck("wallet create", err)
+		}
+		if _, err := os.Stat(walletFile); err != nil {
+			vault, err := createVault(walletFile)
+			errorCheck("wallet create", err)
+			return vault, nil
+		}
+	}
+	vault, boxer, err := openWallet(cmd)
+	errorCheck("wallet open", err)
+	return vault, boxer
 }
 
-func setupWallet(cmd *cobra.Command) (*Vault, error) {
+func createVault(walletFile string) (*Vault, error) {
+	// create directory if not exist
+	dir := filepath.Dir(walletFile)
+	if err := os.MkdirAll(dir, 0750); err != nil {
+		return nil, fmt.Errorf("create directory %s error: %w", dir, err)
+	}
+
+	return NewVault(), nil
+}
+
+func openWallet(cmd *cobra.Command) (*Vault, SecretBoxer, error) {
 	walletFile, err := cmd.Flags().GetString("keystore_path")
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if _, err := os.Stat(walletFile); err != nil {
-		return nil, fmt.Errorf("wallet file %q missing: %w", walletFile, err)
+		return nil, nil, fmt.Errorf("wallet file %q missing: %w", walletFile, err)
 	}
 
 	v, err := NewVaultFromWalletFile(walletFile)
 	if err != nil {
-		return nil, fmt.Errorf("loading vault: %w", err)
+		return nil, nil, fmt.Errorf("loading vault: %w", err)
 	}
 
 	boxer, err := SecretBoxerForType(v.SecretBoxWrap)
 	if err != nil {
-		return nil, fmt.Errorf("secret boxer: %w", err)
+		return nil, nil, fmt.Errorf("secret boxer: %w", err)
 	}
 
 	if err := v.Open(boxer); err != nil {
-		return nil, fmt.Errorf("opening: %w", err)
+		return nil, nil, fmt.Errorf("opening: %w", err)
 	}
 
-	return v, nil
+	return v, boxer, nil
 }
 
 func GetDecryptPassphrase() (string, error) {
+	if envVal := os.Getenv("SLNC_GLOBAL_INSECURE_VAULT_PASSPHRASE"); envVal != "" {
+		return envVal, nil
+	}
+
 	passphrase, err := GetPassword("Enter passphrase to decrypt your solana vault: ")
 	if err != nil {
 		return "", fmt.Errorf("reading password: %s", err)
@@ -83,6 +110,7 @@ func GetDecryptPassphrase() (string, error) {
 
 	return passphrase, nil
 }
+
 func GetEncryptPassphrase() (string, error) {
 	passphrase, err := GetPassword("Enter passphrase to encrypt your solana vault: ")
 	if err != nil {
@@ -100,4 +128,38 @@ func GetEncryptPassphrase() (string, error) {
 	}
 	return passphrase, nil
 
+}
+
+func WrittenReport(walletFile string, newKeys []PublicKey, totalKeys int) {
+	fmt.Println("")
+	fmt.Printf("Wallet file %q written to disk.\n", walletFile)
+	if totalKeys > 0 {
+		fmt.Println("Here are the keys that were ADDED during this operation (use `list` to see them all):")
+		for _, pub := range newKeys {
+			fmt.Printf("- %s\n", pub.String())
+		}
+
+		fmt.Printf("Total keys stored: %d\n", totalKeys)
+	}
+}
+
+func CreateBoxerIfNeeded(boxer SecretBoxer) SecretBoxer {
+	if boxer != nil {
+		return boxer
+	}
+
+	// create secret boxer
+	fmt.Println("")
+	fmt.Println("You will be asked to provide a passphrase to secure your newly created vault.")
+	fmt.Println("Make sure you make it long and strong.")
+	fmt.Println("")
+	if envVal := os.Getenv("SLNC_GLOBAL_INSECURE_VAULT_PASSPHRASE"); envVal != "" {
+		boxer = NewPassphraseBoxer(envVal)
+	} else {
+		password, err := GetEncryptPassphrase()
+		errorCheck("get password: ", err)
+		boxer = NewPassphraseBoxer(password)
+	}
+
+	return boxer
 }
