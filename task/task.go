@@ -69,7 +69,7 @@ func (task *Task) Start() error {
 		task.entrustedMode = false
 	}
 
-	task.appendHandlers(task.EraNew, task.EraBond, task.EraUnbond, task.EraUpdateActive, task.EraUpdateRate, task.EraMerge, task.EraWithdraw)
+	task.appendHandlers(task.EraNew, task.EraSkipBond, task.EraBond, task.EraUnbond, task.EraUpdateActive, task.EraUpdateRate, task.EraMerge, task.EraWithdraw)
 	SafeGoWithRestart(task.handler)
 	return nil
 }
@@ -159,8 +159,13 @@ func (t *Task) handleEra() error {
 func isEmpty(data *lsdprog.EraProcessData) bool {
 	return data.NeedBond == 0 && data.NeedUnbond == 0 && data.NewActive == 0 && data.OldActive == 0 && len(data.PendingStakeAccounts) == 0
 }
-func needBond(data *lsdprog.EraProcessData) bool {
-	return data.NeedBond > 0
+
+func needSkipBond(data *lsdprog.EraProcessData, minDelegationAmount uint64) bool {
+	return data.NeedBond > 0 && data.NeedBond < minDelegationAmount
+}
+
+func needBond(data *lsdprog.EraProcessData, minDelegationAmount uint64) bool {
+	return data.NeedBond >= minDelegationAmount
 }
 
 func needUnbond(data *lsdprog.EraProcessData) bool {
