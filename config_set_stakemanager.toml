@@ -1,0 +1,11 @@
+
+EndpointList = ["https://api.devnet.solana.com"]
+KeystorePath = "./keys/solana_keys.json"
+
+LsdProgramID = "795MBfkwwtAX4fWiFqZcJK8D91P9tqqtiSRrSNhBvGzq"
+StakeManagerAddress = "JAAGMA3nXSFq3QhSMC9Trkf5hneMGoGRLaGtEkmL1Nmj"
+
+## signers
+FeePayerAccount = "ErCsmTQhM9qt17ce8XDTasKo76FEdg2scP2UX4VLxKDb"
+AdminAccount = "GgAy6GnqaPJUdGfCQGMgW2fGMMvmxc3E7a2oizFuCbhF"
+RateChangeLimit = 0

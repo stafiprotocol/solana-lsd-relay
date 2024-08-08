@@ -108,9 +108,9 @@ func (task *Task) EraUpdateRate(stakeManagerAddr common.PublicKey) error {
 	logrus.Infof("EraUpdateRate send tx hash: %s, pipelineActive: %d, eraSnapshotActive: %d, eraProcessActive: %d, rate(old): %d",
 		txHash, stakeManager.Active, stakeManager.EraProcessData.OldActive, stakeManager.EraProcessData.NewActive, stakeManager.Rate)
 	if err := task.waitTx(txHash); err != nil {
-		stakeManagerNew, err := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
-		if err != nil {
-			return err
+		stakeManagerNew, errInside := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
+		if errInside != nil {
+			return errInside
 		}
 
 		if !needUpdateRate(&stakeManagerNew.EraProcessData) {

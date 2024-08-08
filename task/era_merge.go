@@ -93,9 +93,9 @@ func (task *Task) EraMerge(stakeManagerAddr common.PublicKey) error {
 			logrus.Infof("EraMerge send tx hash: %s, srcStakeAccount: %s, dstStakeAccount: %s",
 				txHash, srcStakeAccount.ToBase58(), dstStakeAccount.ToBase58())
 			if err := task.waitTx(txHash); err != nil {
-				stakeManagerNew, err := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
-				if err != nil {
-					return err
+				stakeManagerNew, errInside := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
+				if errInside != nil {
+					return errInside
 				}
 				stakeAccountExist := make(map[string]bool)
 				for _, stakeAccount := range stakeManagerNew.StakeAccounts {

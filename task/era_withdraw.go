@@ -78,8 +78,8 @@ func (task *Task) EraWithdraw(stakeManagerAddr common.PublicKey) error {
 			txHash, stakeAccount.ToBase58(), stakeAccountInfo.Lamports)
 
 		if err := task.waitTx(txHash); err != nil {
-			_, err := task.client.GetStakeAccountInfo(context.Background(), stakeAccount.ToBase58())
-			if err != nil && err == client.ErrAccountNotFound {
+			_, errInside := task.client.GetStakeAccountInfo(context.Background(), stakeAccount.ToBase58())
+			if errInside != nil && errInside == client.ErrAccountNotFound {
 				logrus.Info("EraWithdraw success")
 				return nil
 			}

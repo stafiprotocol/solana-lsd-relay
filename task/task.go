@@ -196,7 +196,13 @@ func (t *Task) waitTx(txHash string) error {
 		}
 
 		if tx.Meta.Err != nil {
-			return fmt.Errorf("%v", tx.Meta.Err)
+			errString := ""
+			for _, log := range tx.Meta.LogMessages {
+				if strings.Contains(log, "Error") || strings.Contains(log, "error") {
+					errString += fmt.Sprintf(" log: %s", log)
+				}
+			}
+			return fmt.Errorf("meta err: %v, logs: %s", tx.Meta.Err, errString)
 		}
 		return nil
 	}

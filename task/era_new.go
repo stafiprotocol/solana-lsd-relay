@@ -56,9 +56,9 @@ func (task *Task) EraNew(stakeManagerAddr common.PublicKey) error {
 
 	logrus.Infof("EraNew send tx hash: %s, newEra: %d", txHash, stakeManager.LatestEra+1)
 	if err := task.waitTx(txHash); err != nil {
-		stakeManagerNew, err := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
-		if err != nil {
-			return err
+		stakeManagerNew, errInside := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
+		if errInside != nil {
+			return errInside
 		}
 		if stakeManagerNew.LatestEra > stakeManager.LatestEra {
 			logrus.Infof("EraNew success")

@@ -56,9 +56,9 @@ func (task *Task) EraSkipBond(stakeManagerAddr common.PublicKey) error {
 	logrus.Infof("EraSkipBond send tx hash: %s,  skipBondAmount: %d",
 		txHash, stakeManager.EraProcessData.NeedBond)
 	if err := task.waitTx(txHash); err != nil {
-		stakeManagerNew, err := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
-		if err != nil {
-			return err
+		stakeManagerNew, errInside := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
+		if errInside != nil {
+			return errInside
 		}
 		if !needSkipBond(&stakeManagerNew.EraProcessData, minDelegationAmount) {
 			logrus.Info("EraSkipBond success")

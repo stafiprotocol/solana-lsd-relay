@@ -62,9 +62,9 @@ func (task *Task) EraUpdateActive(stakeManagerAddr common.PublicKey) error {
 			txHash, stakeAccount.ToBase58(), stakeAccountInfo.StakeAccount.Info.Stake.Delegation.Stake, eraActive, eraProcessActive, int64(eraProcessActive)+stakeAccountInfo.StakeAccount.Info.Stake.Delegation.Stake)
 
 		if err := task.waitTx(txHash); err != nil {
-			stakeManagerNew, err := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
-			if err != nil {
-				return err
+			stakeManagerNew, errInside := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
+			if errInside != nil {
+				return errInside
 			}
 			if !needUpdateActive(&stakeManagerNew.EraProcessData) {
 				logrus.Info("EraUpdateActive success")
