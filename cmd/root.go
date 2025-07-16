@@ -89,6 +89,7 @@ func stackCmd() *cobra.Command {
 	cmd.AddCommand(
 		stackInitCmd(),
 		addEntrustedStakeManager(),
+		setStackFee(),
 	)
 	return cmd
 }

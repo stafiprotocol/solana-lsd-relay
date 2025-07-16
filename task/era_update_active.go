@@ -59,7 +59,7 @@ func (task *Task) EraUpdateActive(stakeManagerAddr common.PublicKey) error {
 		}
 
 		logrus.Infof("EraUpdateActive send tx hash: %s, stakeAccount: %s, stakeAccoutActive: %d, eraSnapshotActive: %d, eraProcessActive(old): %d, eraProcessActive(new): %d",
-			txHash, stakeAccount.ToBase58(), stakeAccountInfo.StakeAccount.Info.Stake.Delegation.Stake, eraActive, eraProcessActive, int64(eraProcessActive)+stakeAccountInfo.StakeAccount.Info.Stake.Delegation.Stake)
+			txHash, stakeAccount.ToBase58(), stakeAccountInfo.StakeAccount.Info.Stake.Delegation.Stake, eraActive, eraProcessActive, uint64(eraProcessActive)+stakeAccountInfo.StakeAccount.Info.Stake.Delegation.Stake)
 
 		if err := task.waitTx(txHash); err != nil {
 			stakeManagerNew, errInside := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())

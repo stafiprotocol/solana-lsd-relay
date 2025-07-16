@@ -8,7 +8,7 @@ require (
 	github.com/mr-tron/base58 v1.2.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.7.0
-	github.com/stafiprotocol/solana-go-sdk v1.6.3
+	github.com/stafiprotocol/solana-go-sdk v1.7.2
 	golang.org/x/crypto v0.16.0
 	golang.org/x/term v0.15.0
 )
@@ -16,7 +16,6 @@ require (
 require (
 	contrib.go.opencensus.io/exporter/stackdriver v0.12.6 // indirect
 	github.com/blendle/zapdriver v1.3.1 // indirect
-	github.com/dfuse-io/binary v0.0.0-20210216024852-4ae6830a495d // indirect
 	github.com/dfuse-io/logging v0.0.0-20201110202154-26697de88c79 // indirect
 	github.com/golang/groupcache v0.0.0-20190702054246-869f871628b6 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect

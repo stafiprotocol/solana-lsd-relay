@@ -63,6 +63,9 @@ type ConfigInitStack struct {
 	// setting
 	StackAddress                    string
 	AddEntrustedStakeManagerAddress string
+
+	StakeManagerAddress string
+	StackFeeCommission  uint64
 }
 
 func LoadInitStackConfig(configFilePath string) (*ConfigInitStack, error) {
