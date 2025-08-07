@@ -4,78 +4,68 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/sirupsen/logrus"
-	"github.com/stafiprotocol/solana-go-sdk/client"
-	"github.com/stafiprotocol/solana-go-sdk/common"
-	"github.com/stafiprotocol/solana-go-sdk/lsdprog"
-	"github.com/stafiprotocol/solana-go-sdk/types"
+	"github.com/stafiprotocol/solana-lsd-relay/pkg/lsd_program"
+	"github.com/stafiprotocol/solana-lsd-relay/pkg/utils"
 )
 
-func (task *Task) EraUpdateActive(stakeManagerAddr common.PublicKey) error {
+func (t *Task) EraUpdateActive(stakeManagerPubkey solana.PublicKey) error {
 	for {
-		stakeManager, err := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
+		stakeManager, _, err := t.getStakeManagerAndPool(stakeManagerPubkey)
 		if err != nil {
 			return err
 		}
 
-		if !needUpdateActive(&stakeManager.EraProcessData) {
+		if !stakeManager.EraProcessData.IsNeedUpdateActive() {
 			return nil
 		}
 
 		eraActive := stakeManager.EraProcessData.OldActive
 		eraProcessActive := stakeManager.EraProcessData.NewActive
 
-		stakeAccount := stakeManager.EraProcessData.PendingStakeAccounts[0]
-		stakeAccountInfo, err := task.client.GetStakeAccountInfo(context.Background(), stakeAccount.ToBase58())
-		if err != nil {
-			return err
+		stakeAccountPubkey := stakeManager.EraProcessData.PendingStakeAccounts[0]
+		stakeAccount := lsd_program.StakeAccount{}
+		if err = utils.GetAndDecodeAccountInfo(t.client, stakeAccountPubkey, &stakeAccount); err != nil {
+			return fmt.Errorf("get stake account info error: %w", err)
 		}
 
-		res, err := task.client.GetLatestBlockhash(context.Background(), client.GetLatestBlockhashConfig{
-			Commitment: client.CommitmentConfirmed,
-		})
+		eraUpdateActiveInstruction, err := lsd_program.NewEraUpdateActiveInstruction(stakeManagerPubkey, stakeAccountPubkey)
 		if err != nil {
-			fmt.Printf("get recent block hash error, err: %v\n", err)
+			return fmt.Errorf("new era update active instruction error: %w", err)
 		}
-		rawTx, err := types.CreateRawTransaction(types.CreateRawTransactionParam{
-			Instructions: []types.Instruction{
-				lsdprog.EraUpdateActive(
-					task.lsdProgramID,
-					stakeManagerAddr,
-					stakeAccount,
-				),
-			},
-			Signers:         []types.Account{task.feePayerAccount},
-			FeePayer:        task.feePayerAccount.PublicKey,
-			RecentBlockHash: res.Blockhash,
-		})
 
+		latestBlockHashRes, err := t.client.GetLatestBlockhash(context.Background(), rpc.CommitmentConfirmed)
 		if err != nil {
-			fmt.Printf("generate tx error, err: %v\n", err)
+			return fmt.Errorf("get recent block hash error: %w", err)
 		}
-		txHash, err := task.client.SendRawTransaction(context.Background(), rawTx)
+
+		tx, err := utils.NewSolanaTransaction(latestBlockHashRes.Value.Blockhash, []solana.Instruction{eraUpdateActiveInstruction}, t.feePayerAccount.PublicKey(), true)
 		if err != nil {
-			fmt.Printf("send tx error, err: %v\n", err)
+			return fmt.Errorf("new solana transaction error: %w", err)
 		}
 
 		logrus.Infof("EraUpdateActive send tx hash: %s, stakeAccount: %s, stakeAccoutActive: %d, eraSnapshotActive: %d, eraProcessActive(old): %d, eraProcessActive(new): %d",
-			txHash, stakeAccount.ToBase58(), stakeAccountInfo.StakeAccount.Info.Stake.Delegation.Stake, eraActive, eraProcessActive, uint64(eraProcessActive)+stakeAccountInfo.StakeAccount.Info.Stake.Delegation.Stake)
-
-		if err := task.waitTx(txHash); err != nil {
-			stakeManagerNew, errInside := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
-			if errInside != nil {
-				return errInside
-			}
-			if !needUpdateActive(&stakeManagerNew.EraProcessData) {
-				logrus.Info("EraUpdateActive success")
-				return nil
-			}
-			if stakeManagerNew.EraProcessData.PendingStakeAccounts[0] != stakeAccount {
-				logrus.Info("EraUpdateActive success")
-			}
-			return err
+			tx.Signatures[0], stakeAccountPubkey, stakeAccount.Info.Stake.Delegation.Stake, eraActive, eraProcessActive, uint64(eraProcessActive)+stakeAccount.Info.Stake.Delegation.Stake)
+		err = utils.SignAndSendTx(t.client, tx, utils.GetSignFunc(t.feePayerAccount), latestBlockHashRes.Value.LastValidBlockHeight)
+		if err == nil {
+			logrus.Info("EraUpdateActive success")
+			return nil
 		}
 
-		logrus.Info("EraUpdateActive success")
+		stakeManagerNew, _, verifyErr := t.getStakeManagerAndPool(stakeManagerPubkey)
+		if verifyErr != nil {
+			return verifyErr
+		}
+		if !stakeManagerNew.EraProcessData.IsNeedUpdateActive() {
+			logrus.Info("EraUpdateActive success")
+			return nil
+		}
+		if stakeManagerNew.EraProcessData.PendingStakeAccounts[0] != stakeAccountPubkey {
+			logrus.Info("EraUpdateActive success")
+		}
+
+		return fmt.Errorf("EraUpdateActive failed err: %w", err)
 	}
 }

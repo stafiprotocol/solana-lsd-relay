@@ -1,16 +1,15 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
+	"time"
 
+	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/spf13/cobra"
-	"github.com/stafiprotocol/solana-go-sdk/client"
-	"github.com/stafiprotocol/solana-go-sdk/common"
-	"github.com/stafiprotocol/solana-go-sdk/lsdprog"
-	"github.com/stafiprotocol/solana-go-sdk/types"
 	"github.com/stafiprotocol/solana-lsd-relay/pkg/config"
-	"github.com/stafiprotocol/solana-lsd-relay/pkg/vault"
+	"github.com/stafiprotocol/solana-lsd-relay/pkg/lsd_program"
+	"golang.org/x/time/rate"
 )
 
 func setStackFee() *cobra.Command {
@@ -20,6 +19,11 @@ func setStackFee() *cobra.Command {
 		Short: "Set stack fee",
 
 		RunE: func(cmd *cobra.Command, args []string) error {
+			exportTxMessage, err := cmd.Flags().GetBool(flagExportTx)
+			if err != nil {
+				return err
+			}
+
 			configPath, err := cmd.Flags().GetString(flagConfigPath)
 			if err != nil {
 				return err
@@ -30,54 +34,18 @@ func setStackFee() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			v, err := vault.NewVaultFromWalletFile(cfg.KeystorePath)
-			if err != nil {
-				return err
-			}
-			boxer, err := vault.SecretBoxerForType(v.SecretBoxWrap)
-			if err != nil {
-				return fmt.Errorf("secret boxer: %w", err)
-			}
+			lsd_program.ProgramID = solana.MustPublicKeyFromBase58(cfg.LsdProgramID)
 
-			if err := v.Open(boxer); err != nil {
-				return fmt.Errorf("opening: %w", err)
-			}
+			adminPubkey := solana.MustPublicKeyFromBase58(cfg.AdminAccount)
+			feePayerPubkey := solana.MustPublicKeyFromBase58(cfg.FeePayerAccount)
+			stackPubkey := solana.MustPublicKeyFromBase58(cfg.StackAddress)
+			stakeManagerPubkey := solana.MustPublicKeyFromBase58(cfg.StakeManagerAddress)
 
-			privateKeyMap := make(map[string]vault.PrivateKey)
-			accountMap := make(map[string]types.Account)
-			for _, privKey := range v.KeyBag {
-				privateKeyMap[privKey.PublicKey().String()] = privKey
-				accountMap[privKey.PublicKey().String()] = types.AccountFromPrivateKeyBytes(privKey)
-			}
-
-			c := client.NewClient(cfg.EndpointList)
-
-			res, err := c.GetLatestBlockhash(context.Background(), client.GetLatestBlockhashConfig{
-				Commitment: client.CommitmentConfirmed,
-			})
-			if err != nil {
-				fmt.Printf("get recent block hash error, err: %v\n", err)
-			}
-
-			lsdProgramID := common.PublicKeyFromString(cfg.LsdProgramID)
-
-			feePayerAccount, exist := accountMap[cfg.FeePayerAccount]
-			if !exist {
-				return fmt.Errorf("fee payer not exit in vault")
-			}
-			adminAccount, exist := accountMap[cfg.AdminAccount]
-			if !exist {
-				return fmt.Errorf("admin not exit in vault")
-			}
-
-			stakeManagerPubkey := common.PublicKeyFromString(cfg.StakeManagerAddress)
-			stackPubkey := common.PublicKeyFromString(cfg.StackAddress)
-
-			fmt.Println("stack:", stackPubkey.ToBase58())
-			fmt.Println("stakeManager:", stakeManagerPubkey.ToBase58())
+			fmt.Println("stack:", stackPubkey)
+			fmt.Println("stakeManager:", stakeManagerPubkey)
 			fmt.Println("stackFeeCommission:", cfg.StackFeeCommission)
-			fmt.Println("admin:", adminAccount.PublicKey.ToBase58())
-			fmt.Println("feePayer:", feePayerAccount.PublicKey.ToBase58())
+			fmt.Println("admin:", adminPubkey)
+			fmt.Println("feePayer:", feePayerPubkey)
 		Out:
 			for {
 				fmt.Println("\ncheck config info, then press (y/n) to continue:")
@@ -93,34 +61,27 @@ func setStackFee() *cobra.Command {
 					continue
 				}
 			}
-
-			rawTx, err := types.CreateRawTransaction(types.CreateRawTransactionParam{
-				Instructions: []types.Instruction{
-					lsdprog.SetPlatformStackFeeCommission(
-						lsdProgramID,
-						stakeManagerPubkey,
-						stackPubkey,
-						adminAccount.PublicKey,
-						cfg.StackFeeCommission,
-					),
-				},
-				Signers:         []types.Account{feePayerAccount, adminAccount},
-				FeePayer:        feePayerAccount.PublicKey,
-				RecentBlockHash: res.Blockhash,
-			})
+			instruction, err := lsd_program.NewSetPlatformStackFeeCommissionInstruction(cfg.StackFeeCommission, stakeManagerPubkey, stackPubkey, adminPubkey)
 			if err != nil {
-				fmt.Printf("generate tx error, err: %v\n", err)
+				return fmt.Errorf("NewSetPlatformStackFeeCommissionInstruction failed, err: %s", err.Error())
 			}
-			txHash, err := c.SendRawTransaction(context.Background(), rawTx)
+			instructions := []solana.Instruction{instruction}
+
+			rpcClient := rpc.NewWithCustomRPCClient(rpc.NewWithLimiter(
+				cfg.EndpointList[0],
+				rate.Every(time.Second), // time frame
+				5,                       // limit of requests per time frame
+			))
+
+			tx, err := AdminExecuteInstructions(rpcClient, instructions, cfg.KeystorePath, feePayerPubkey, adminPubkey, exportTxMessage)
 			if err != nil {
-				fmt.Printf("send tx error, err: %v\n", err)
+				return err
 			}
-
-			fmt.Println("Set stack fee txHash:", txHash)
-
+			fmt.Println("setStackFee txHash:", tx.Signatures[0].String())
 			return nil
 		},
 	}
 	cmd.Flags().String(flagConfigPath, defaultConfigPath, "Config file path")
+	cmd.Flags().Bool(flagExportTx, false, "Export tx message")
 	return cmd
 }

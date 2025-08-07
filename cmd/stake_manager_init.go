@@ -5,18 +5,21 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/programs/system"
+	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/spf13/cobra"
-	"github.com/stafiprotocol/solana-go-sdk/client"
-	"github.com/stafiprotocol/solana-go-sdk/common"
-	"github.com/stafiprotocol/solana-go-sdk/lsdprog"
-	"github.com/stafiprotocol/solana-go-sdk/sysprog"
-	"github.com/stafiprotocol/solana-go-sdk/types"
 	"github.com/stafiprotocol/solana-lsd-relay/pkg/config"
-	"github.com/stafiprotocol/solana-lsd-relay/pkg/vault"
+	"github.com/stafiprotocol/solana-lsd-relay/pkg/lsd_program"
+	"golang.org/x/time/rate"
 )
 
 var stakePoolSeed = []byte("pool_seed")
 var stakeManagerSeed = "stake_manager_seed_%d"
+
+var StakeManagerAccountLengthDefault = uint64(100000)
+var StackAccountLengthDefault = uint64(1000)
+var StackFeeAccountLengthDefault = uint64(17)
 
 func stakeManagerInitCmd() *cobra.Command {
 
@@ -25,6 +28,11 @@ func stakeManagerInitCmd() *cobra.Command {
 		Short: "Init stake manager",
 
 		RunE: func(cmd *cobra.Command, args []string) error {
+			exportTxMessage, err := cmd.Flags().GetBool(flagExportTx)
+			if err != nil {
+				return err
+			}
+
 			configPath, err := cmd.Flags().GetString(flagConfigPath)
 			if err != nil {
 				return err
@@ -35,97 +43,69 @@ func stakeManagerInitCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			v, err := vault.NewVaultFromWalletFile(cfg.KeystorePath)
-			if err != nil {
-				return err
-			}
-			boxer, err := vault.SecretBoxerForType(v.SecretBoxWrap)
-			if err != nil {
-				return fmt.Errorf("secret boxer: %w", err)
-			}
+			lsdProgramID := solana.MustPublicKeyFromBase58(cfg.LsdProgramID)
 
-			if err := v.Open(boxer); err != nil {
-				return fmt.Errorf("opening: %w", err)
-			}
+			stackPubkey := solana.MustPublicKeyFromBase58(cfg.StackAddress)
+			lsdTokenMintPubkey := solana.MustPublicKeyFromBase58(cfg.LsdTokenMintAddress)
+			validatorPubkey := solana.MustPublicKeyFromBase58(cfg.ValidatorAddress)
+			feePayerPubkey := solana.MustPublicKeyFromBase58(cfg.FeePayerAccount)
+			adminPubkey := solana.MustPublicKeyFromBase58(cfg.AdminAccount)
 
-			privateKeyMap := make(map[string]vault.PrivateKey)
-			accountMap := make(map[string]types.Account)
-			for _, privKey := range v.KeyBag {
-				privateKeyMap[privKey.PublicKey().String()] = privKey
-				accountMap[privKey.PublicKey().String()] = types.AccountFromPrivateKeyBytes(privKey)
-			}
-
-			c := client.NewClient(cfg.EndpointList)
-
-			res, err := c.GetLatestBlockhash(context.Background(), client.GetLatestBlockhashConfig{
-				Commitment: client.CommitmentConfirmed,
-			})
-			if err != nil {
-				fmt.Printf("get recent block hash error, err: %v\n", err)
-			}
-
-			lsdTokenMintPubkey := common.PublicKeyFromString(cfg.LsdTokenMintAddress)
-			lsdProgramID := common.PublicKeyFromString(cfg.LsdProgramID)
-			validatorPubkey := common.PublicKeyFromString(cfg.ValidatorAddress)
-			stackPubkey := common.PublicKeyFromString(cfg.StackAddress)
-
-			feePayerAccount, exist := accountMap[cfg.FeePayerAccount]
-			if !exist {
-				return fmt.Errorf("fee payer not exit in vault")
-			}
-			adminAccount, exist := accountMap[cfg.AdminAccount]
-			if !exist {
-				return fmt.Errorf("admin not exit in vault")
-			}
-
-			var stakeManagerPubkey common.PublicKey
+			rpcClient := rpc.NewWithCustomRPCClient(rpc.NewWithLimiter(
+				cfg.EndpointList[0],
+				rate.Every(time.Second), // time frame
+				5,                       // limit of requests per time frame
+			))
+			var stakeManagerPubkey solana.PublicKey
 			var seed string
 			for i := 0; ; i++ {
 				seed = fmt.Sprintf(stakeManagerSeed, i)
-				stakeManagerPubkey = common.CreateWithSeed(feePayerAccount.PublicKey, seed, lsdProgramID)
-				_, err := c.GetAccountInfo(context.Background(), stakeManagerPubkey.ToBase58(), client.GetAccountInfoConfig{
-					Encoding:  client.GetAccountInfoConfigEncodingBase64,
-					DataSlice: client.GetAccountInfoConfigDataSlice{},
-				})
+
+				stakeManagerPubkey, err = solana.CreateWithSeed(feePayerPubkey, seed, lsdProgramID)
 				if err != nil {
-					if err == client.ErrAccountNotFound {
+					return err
+				}
+				_, err := rpcClient.GetAccountInfo(context.Background(), stakeManagerPubkey)
+				if err != nil {
+					if err == rpc.ErrNotFound {
 						break
 					} else {
 						return err
 					}
 				}
 			}
-			if cfg.StakeManagerAddress != stakeManagerPubkey.ToBase58() {
-				return fmt.Errorf("stake manager not match: cfg: %s, avaiable create stake manager: %s", cfg.StakeManagerAddress, stakeManagerPubkey.ToBase58())
+			if cfg.StakeManagerAddress != stakeManagerPubkey.String() {
+				return fmt.Errorf("stake manager not match: cfg: %s, avaiable create stake manager: %s",
+					cfg.StakeManagerAddress, stakeManagerPubkey.String())
 			}
 
-			stackFeeAccountPubkey, _, err := common.FindProgramAddress([][]byte{stackPubkey.Bytes(), lsdTokenMintPubkey.Bytes()}, lsdProgramID)
+			stackFeeAccountPubkey, _, err := solana.FindProgramAddress([][]byte{stackPubkey.Bytes(), lsdTokenMintPubkey.Bytes()}, lsdProgramID)
 			if err != nil {
 				return err
 			}
-			stakePool, _, err := common.FindProgramAddress([][]byte{stakeManagerPubkey.Bytes(), stakePoolSeed}, lsdProgramID)
-			if err != nil {
-				return err
-			}
-
-			stakePoolRent, err := c.GetMinimumBalanceForRentExemption(context.Background(), 0)
+			stakePool, _, err := solana.FindProgramAddress([][]byte{stakeManagerPubkey.Bytes(), stakePoolSeed}, lsdProgramID)
 			if err != nil {
 				return err
 			}
 
-			stakeManagerRent, err := c.GetMinimumBalanceForRentExemption(context.Background(), lsdprog.StakeManagerAccountLengthDefault)
+			stakePoolRent, err := rpcClient.GetMinimumBalanceForRentExemption(context.Background(), 0, rpc.CommitmentConfirmed)
 			if err != nil {
 				return err
 			}
 
-			fmt.Println("lsdProgramID:", lsdProgramID.ToBase58())
-			fmt.Println("stack:", stackPubkey.ToBase58())
-			fmt.Println("lsdTokenMint:", lsdTokenMintPubkey.ToBase58())
-			fmt.Println("stakeManager:", stakeManagerPubkey.ToBase58())
-			fmt.Println("stakePool:", stakePool.ToBase58())
-			fmt.Println("stackFeeAccount(determinately generated):", stackFeeAccountPubkey.ToBase58())
-			fmt.Println("admin", adminAccount.PublicKey.ToBase58())
-			fmt.Println("feePayer:", feePayerAccount.PublicKey.ToBase58())
+			stakeManagerRent, err := rpcClient.GetMinimumBalanceForRentExemption(context.Background(), StakeManagerAccountLengthDefault, rpc.CommitmentConfirmed)
+			if err != nil {
+				return err
+			}
+
+			fmt.Println("lsdProgramID:", lsdProgramID)
+			fmt.Println("stack:", stackPubkey)
+			fmt.Println("lsdTokenMint:", lsdTokenMintPubkey)
+			fmt.Println("stakeManager:", stakeManagerPubkey)
+			fmt.Println("stakePool:", stakePool)
+			fmt.Println("stackFeeAccount(determinately generated):", stackFeeAccountPubkey)
+			fmt.Println("admin:", adminPubkey)
+			fmt.Println("feePayer:", feePayerPubkey)
 			fmt.Println("stakePool rent:", stakePoolRent)
 			fmt.Println("stakeManager rent:", stakeManagerRent)
 		Out:
@@ -144,69 +124,45 @@ func stakeManagerInitCmd() *cobra.Command {
 				}
 			}
 
-			rawTx, err := types.CreateRawTransaction(types.CreateRawTransactionParam{
-				Instructions: []types.Instruction{
-					sysprog.Transfer(
-						feePayerAccount.PublicKey,
-						stakePool,
-						stakePoolRent,
-					),
-					sysprog.CreateAccountWithSeed(
-						feePayerAccount.PublicKey,
-						stakeManagerPubkey,
-						feePayerAccount.PublicKey,
-						lsdProgramID,
-						seed,
-						stakeManagerRent,
-						lsdprog.StakeManagerAccountLengthDefault,
-					),
-					lsdprog.InitializeStakeManager(
-						lsdProgramID,
-						stakeManagerPubkey,
-						stackPubkey,
-						stakePool,
-						stackFeeAccountPubkey,
-						lsdTokenMintPubkey,
-						validatorPubkey,
-						feePayerAccount.PublicKey,
-						adminAccount.PublicKey,
-					),
-				},
-				Signers:         []types.Account{feePayerAccount, adminAccount},
-				FeePayer:        feePayerAccount.PublicKey,
-				RecentBlockHash: res.Blockhash,
-			})
+			transferInstruction := system.NewTransferInstructionBuilder().
+				SetLamports(stakePoolRent).
+				SetFundingAccount(feePayerPubkey).
+				SetRecipientAccount(stakePool).
+				Build()
+
+			createAccountInstruction := system.NewCreateAccountWithSeedInstruction(
+				feePayerPubkey,
+				seed,
+				stakeManagerRent,
+				StakeManagerAccountLengthDefault,
+				lsdProgramID,
+				feePayerPubkey,
+				stakeManagerPubkey,
+				feePayerPubkey,
+			).Build()
+
+			initInstruction, err := lsd_program.NewInitializeStakeManagerInstruction(
+				stakeManagerPubkey, stackPubkey, stakePool, stackFeeAccountPubkey,
+				lsdTokenMintPubkey, validatorPubkey, feePayerPubkey, adminPubkey,
+				solana.SPLAssociatedTokenAccountProgramID, system.ProgramID, solana.SysVarClockPubkey, solana.SysVarRentPubkey)
 			if err != nil {
-				fmt.Printf("generate tx error, err: %v\n", err)
+				return fmt.Errorf("NewInitializeStakeManagerInstruction failed, err: %s", err.Error())
 			}
-			txHash, err := c.SendRawTransaction(context.Background(), rawTx)
+			instructions := []solana.Instruction{
+				transferInstruction,
+				createAccountInstruction,
+				initInstruction,
+			}
+
+			tx, err := AdminExecuteInstructions(rpcClient, instructions, cfg.KeystorePath, feePayerPubkey, adminPubkey, exportTxMessage)
 			if err != nil {
-				fmt.Printf("send tx error, err: %v\n", err)
+				return err
 			}
-
-			fmt.Println("initializeStakeManager txHash:", txHash)
-
-			retry := 0
-			for {
-				if retry > 60 {
-					return fmt.Errorf("tx %s failed", txHash)
-				}
-				_, err = c.GetAccountInfo(context.Background(), stakeManagerPubkey.ToBase58(), client.GetAccountInfoConfig{
-					Encoding:  client.GetAccountInfoConfigEncodingBase64,
-					DataSlice: client.GetAccountInfoConfigDataSlice{},
-				})
-				if err != nil {
-					retry++
-					time.Sleep(time.Second)
-					continue
-				}
-
-				break
-			}
-
+			fmt.Println("initializeStakeManager txHash:", tx.Signatures[0].String())
 			return nil
 		},
 	}
 	cmd.Flags().String(flagConfigPath, defaultConfigPath, "Config file path")
+	cmd.Flags().Bool(flagExportTx, false, "Export tx message")
 	return cmd
 }

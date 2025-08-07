@@ -1,0 +1,1989 @@
+{
+  "address": "8ufkkVBM6s52WRnhdF2yUCu1eNPnS123SoVKv8wyBFAp",
+  "metadata": {
+    "name": "lsd_program",
+    "version": "0.1.0",
+    "spec": "0.1.0"
+  },
+  "instructions": [
+    {
+      "name": "initialize_stack",
+      "discriminator": [
+        139,
+        248,
+        249,
+        177,
+        239,
+        66,
+        51,
+        252
+      ],
+      "accounts": [
+        {
+          "name": "stack",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "rent_payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "admin",
+          "signer": true
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize_stake_manager",
+      "discriminator": [
+        75,
+        220,
+        4,
+        110,
+        166,
+        194,
+        173,
+        1
+      ],
+      "accounts": [
+        {
+          "name": "stake_manager",
+          "writable": true
+        },
+        {
+          "name": "stack"
+        },
+        {
+          "name": "stake_pool"
+        },
+        {
+          "name": "stack_fee_account",
+          "writable": true
+        },
+        {
+          "name": "lsd_token_mint"
+        },
+        {
+          "name": "validator"
+        },
+        {
+          "name": "rent_payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "admin",
+          "signer": true
+        },
+        {
+          "name": "associated_token_program"
+        },
+        {
+          "name": "system_program"
+        },
+        {
+          "name": "clock"
+        },
+        {
+          "name": "rent"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "transfer_stack_admin",
+      "discriminator": [
+        239,
+        183,
+        112,
+        103,
+        100,
+        99,
+        128,
+        84
+      ],
+      "accounts": [
+        {
+          "name": "stack",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_admin",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "set_stack_fee_commission",
+      "discriminator": [
+        170,
+        16,
+        193,
+        90,
+        33,
+        62,
+        62,
+        97
+      ],
+      "accounts": [
+        {
+          "name": "stack",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "stack_fee_commission",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "set_platform_stack_fee_commission",
+      "discriminator": [
+        85,
+        251,
+        61,
+        253,
+        7,
+        73,
+        13,
+        178
+      ],
+      "accounts": [
+        {
+          "name": "stake_manager",
+          "writable": true
+        },
+        {
+          "name": "stack"
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "stack_fee_commission",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "add_entrusted_stake_manager",
+      "discriminator": [
+        81,
+        65,
+        28,
+        165,
+        239,
+        10,
+        152,
+        193
+      ],
+      "accounts": [
+        {
+          "name": "stack",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "stake_manager",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "remove_entrusted_stake_manager",
+      "discriminator": [
+        232,
+        175,
+        69,
+        153,
+        85,
+        181,
+        33,
+        160
+      ],
+      "accounts": [
+        {
+          "name": "stack",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "stake_manager",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "transfer_stake_manager_admin",
+      "discriminator": [
+        225,
+        28,
+        79,
+        223,
+        28,
+        96,
+        210,
+        226
+      ],
+      "accounts": [
+        {
+          "name": "stake_manager",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_admin",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "transfer_balancer",
+      "discriminator": [
+        99,
+        139,
+        245,
+        206,
+        226,
+        124,
+        106,
+        83
+      ],
+      "accounts": [
+        {
+          "name": "stake_manager",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_balancer",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "set_min_stake_amount",
+      "discriminator": [
+        30,
+        179,
+        162,
+        249,
+        158,
+        57,
+        14,
+        254
+      ],
+      "accounts": [
+        {
+          "name": "stake_manager",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "set_unbonding_duration",
+      "discriminator": [
+        143,
+        183,
+        204,
+        237,
+        156,
+        203,
+        133,
+        250
+      ],
+      "accounts": [
+        {
+          "name": "stake_manager",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "duration",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "set_rate_change_limit",
+      "discriminator": [
+        13,
+        141,
+        180,
+        253,
+        190,
+        210,
+        229,
+        210
+      ],
+      "accounts": [
+        {
+          "name": "stake_manager",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "rate_change_limit",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "set_platform_fee_commission",
+      "discriminator": [
+        193,
+        162,
+        133,
+        226,
+        38,
+        87,
+        16,
+        252
+      ],
+      "accounts": [
+        {
+          "name": "stake_manager",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "protocol_fee_commission",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "add_validator",
+      "discriminator": [
+        250,
+        113,
+        53,
+        54,
+        141,
+        117,
+        215,
+        185
+      ],
+      "accounts": [
+        {
+          "name": "stake_manager",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_validator",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "remove_validator",
+      "discriminator": [
+        25,
+        96,
+        211,
+        155,
+        161,
+        14,
+        168,
+        188
+      ],
+      "accounts": [
+        {
+          "name": "stake_manager",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "remove_validator",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "realloc_stake_manager",
+      "discriminator": [
+        124,
+        76,
+        19,
+        251,
+        234,
+        127,
+        12,
+        141
+      ],
+      "accounts": [
+        {
+          "name": "stake_manager",
+          "writable": true
+        },
+        {
+          "name": "admin",
+          "signer": true
+        },
+        {
+          "name": "rent_payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "new_size",
+          "type": "u32"
+        }
+      ]
+    },
+    {
+      "name": "redelegate",
+      "discriminator": [
+        212,
+        82,
+        51,
+        160,
+        228,
+        80,
+        116,
+        35
+      ],
+      "accounts": [
+        {
+          "name": "stake_manager",
+          "writable": true
+        },
+        {
+          "name": "balancer",
+          "signer": true
+        },
+        {
+          "name": "to_validator",
+          "writable": true
+        },
+        {
+          "name": "stake_pool"
+        },
+        {
+          "name": "from_stake_account",
+          "writable": true
+        },
+        {
+          "name": "split_stake_account",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "to_stake_account",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "rent_payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "clock"
+        },
+        {
+          "name": "stake_config"
+        },
+        {
+          "name": "stake_history"
+        },
+        {
+          "name": "stake_program"
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "redelegate_amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "stake",
+      "discriminator": [
+        206,
+        176,
+        202,
+        18,
+        200,
+        209,
+        179,
+        108
+      ],
+      "accounts": [
+        {
+          "name": "stake_manager",
+          "writable": true
+        },
+        {
+          "name": "stake_pool",
+          "writable": true
+        },
+        {
+          "name": "from",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "lsd_token_mint",
+          "writable": true
+        },
+        {
+          "name": "mint_to",
+          "writable": true
+        },
+        {
+          "name": "system_program"
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "stake_amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "unstake",
+      "discriminator": [
+        90,
+        95,
+        107,
+        42,
+        205,
+        124,
+        50,
+        225
+      ],
+      "accounts": [
+        {
+          "name": "stake_manager",
+          "writable": true
+        },
+        {
+          "name": "lsd_token_mint",
+          "writable": true
+        },
+        {
+          "name": "burn_lsd_token_from",
+          "writable": true
+        },
+        {
+          "name": "burn_lsd_token_authority",
+          "signer": true
+        },
+        {
+          "name": "unstake_account",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "rent_payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program"
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "clock"
+        },
+        {
+          "name": "rent"
+        }
+      ],
+      "args": [
+        {
+          "name": "unstake_amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "withdraw",
+      "discriminator": [
+        183,
+        18,
+        70,
+        156,
+        148,
+        109,
+        161,
+        34
+      ],
+      "accounts": [
+        {
+          "name": "stake_manager",
+          "writable": true
+        },
+        {
+          "name": "stake_pool",
+          "writable": true
+        },
+        {
+          "name": "unstake_account",
+          "writable": true
+        },
+        {
+          "name": "recipient",
+          "writable": true
+        },
+        {
+          "name": "clock"
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "era_new",
+      "discriminator": [
+        96,
+        178,
+        91,
+        52,
+        66,
+        223,
+        134,
+        98
+      ],
+      "accounts": [
+        {
+          "name": "stake_manager",
+          "writable": true
+        },
+        {
+          "name": "clock"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "era_bond",
+      "discriminator": [
+        44,
+        238,
+        86,
+        188,
+        197,
+        69,
+        241,
+        91
+      ],
+      "accounts": [
+        {
+          "name": "stake_manager",
+          "writable": true
+        },
+        {
+          "name": "validator",
+          "writable": true
+        },
+        {
+          "name": "stake_pool",
+          "writable": true
+        },
+        {
+          "name": "stake_account",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "rent_payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "clock"
+        },
+        {
+          "name": "rent"
+        },
+        {
+          "name": "stake_config"
+        },
+        {
+          "name": "stake_history"
+        },
+        {
+          "name": "stake_program"
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "era_skip_bond",
+      "discriminator": [
+        191,
+        75,
+        28,
+        113,
+        210,
+        201,
+        136,
+        19
+      ],
+      "accounts": [
+        {
+          "name": "stake_manager",
+          "writable": true
+        },
+        {
+          "name": "stake_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "era_unbond",
+      "discriminator": [
+        193,
+        62,
+        151,
+        104,
+        91,
+        68,
+        92,
+        148
+      ],
+      "accounts": [
+        {
+          "name": "stake_manager",
+          "writable": true
+        },
+        {
+          "name": "stake_pool"
+        },
+        {
+          "name": "from_stake_account",
+          "writable": true
+        },
+        {
+          "name": "split_stake_account",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "validator",
+          "writable": true
+        },
+        {
+          "name": "rent_payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "clock"
+        },
+        {
+          "name": "rent"
+        },
+        {
+          "name": "stake_history"
+        },
+        {
+          "name": "stake_program"
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "era_update_active",
+      "discriminator": [
+        185,
+        133,
+        175,
+        129,
+        26,
+        151,
+        115,
+        218
+      ],
+      "accounts": [
+        {
+          "name": "stake_manager",
+          "writable": true
+        },
+        {
+          "name": "stake_account"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "era_update_rate",
+      "discriminator": [
+        223,
+        55,
+        230,
+        209,
+        252,
+        154,
+        227,
+        116
+      ],
+      "accounts": [
+        {
+          "name": "stake_manager",
+          "writable": true
+        },
+        {
+          "name": "stack"
+        },
+        {
+          "name": "stake_pool"
+        },
+        {
+          "name": "lsd_token_mint",
+          "writable": true
+        },
+        {
+          "name": "platform_fee_recipient",
+          "writable": true
+        },
+        {
+          "name": "stack_fee_recipient",
+          "writable": true
+        },
+        {
+          "name": "stack_fee_account",
+          "writable": true
+        },
+        {
+          "name": "associated_token_program"
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "era_merge",
+      "discriminator": [
+        174,
+        80,
+        147,
+        234,
+        24,
+        233,
+        211,
+        195
+      ],
+      "accounts": [
+        {
+          "name": "stake_manager",
+          "writable": true
+        },
+        {
+          "name": "src_stake_account",
+          "writable": true
+        },
+        {
+          "name": "dst_stake_account",
+          "writable": true
+        },
+        {
+          "name": "stake_pool"
+        },
+        {
+          "name": "clock"
+        },
+        {
+          "name": "stake_history"
+        },
+        {
+          "name": "stake_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "era_withdraw",
+      "discriminator": [
+        92,
+        3,
+        86,
+        172,
+        211,
+        111,
+        176,
+        238
+      ],
+      "accounts": [
+        {
+          "name": "stake_manager",
+          "writable": true
+        },
+        {
+          "name": "stake_pool",
+          "writable": true
+        },
+        {
+          "name": "stake_account",
+          "writable": true
+        },
+        {
+          "name": "clock"
+        },
+        {
+          "name": "stake_history"
+        },
+        {
+          "name": "stake_program"
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Stack",
+      "discriminator": [
+        58,
+        70,
+        168,
+        244,
+        188,
+        169,
+        129,
+        79
+      ]
+    },
+    {
+      "name": "StakeManager",
+      "discriminator": [
+        205,
+        143,
+        54,
+        235,
+        240,
+        28,
+        104,
+        211
+      ]
+    },
+    {
+      "name": "UnstakeAccount",
+      "discriminator": [
+        45,
+        203,
+        242,
+        225,
+        172,
+        87,
+        112,
+        71
+      ]
+    },
+    {
+      "name": "StackFeeAccount",
+      "discriminator": [
+        76,
+        201,
+        86,
+        252,
+        221,
+        169,
+        67,
+        99
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "EventEraBond",
+      "discriminator": [
+        201,
+        184,
+        165,
+        183,
+        119,
+        31,
+        13,
+        45
+      ]
+    },
+    {
+      "name": "EventEraMerge",
+      "discriminator": [
+        214,
+        23,
+        6,
+        241,
+        108,
+        236,
+        45,
+        255
+      ]
+    },
+    {
+      "name": "EventEraNew",
+      "discriminator": [
+        136,
+        194,
+        142,
+        92,
+        250,
+        156,
+        169,
+        205
+      ]
+    },
+    {
+      "name": "EventEraSkipBond",
+      "discriminator": [
+        151,
+        9,
+        57,
+        217,
+        134,
+        146,
+        239,
+        62
+      ]
+    },
+    {
+      "name": "EventEraUnbond",
+      "discriminator": [
+        143,
+        241,
+        61,
+        122,
+        199,
+        237,
+        39,
+        69
+      ]
+    },
+    {
+      "name": "EventEraUpdateActive",
+      "discriminator": [
+        48,
+        177,
+        221,
+        77,
+        44,
+        227,
+        41,
+        27
+      ]
+    },
+    {
+      "name": "EventEraUpdateRate",
+      "discriminator": [
+        85,
+        102,
+        224,
+        204,
+        12,
+        121,
+        241,
+        252
+      ]
+    },
+    {
+      "name": "EventEraWithdraw",
+      "discriminator": [
+        185,
+        4,
+        129,
+        162,
+        74,
+        189,
+        5,
+        141
+      ]
+    },
+    {
+      "name": "EventRedelegate",
+      "discriminator": [
+        213,
+        89,
+        235,
+        90,
+        33,
+        141,
+        34,
+        65
+      ]
+    },
+    {
+      "name": "EventStake",
+      "discriminator": [
+        193,
+        220,
+        225,
+        33,
+        201,
+        27,
+        61,
+        43
+      ]
+    },
+    {
+      "name": "EventUnstake",
+      "discriminator": [
+        7,
+        14,
+        248,
+        129,
+        43,
+        55,
+        41,
+        104
+      ]
+    },
+    {
+      "name": "EventWithdraw",
+      "discriminator": [
+        216,
+        247,
+        255,
+        93,
+        80,
+        238,
+        33,
+        136
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "ProgramIdNotMatch",
+      "msg": "Program id not match"
+    },
+    {
+      "code": 6001,
+      "name": "RemainingAccountsNotMatch",
+      "msg": "Remaining accounts not match"
+    },
+    {
+      "code": 6002,
+      "name": "AdminNotMatch",
+      "msg": "Admin not match"
+    },
+    {
+      "code": 6003,
+      "name": "BalancerNotMatch",
+      "msg": "Balancer not match"
+    },
+    {
+      "code": 6004,
+      "name": "InitializeDataMatch",
+      "msg": "Initialize data not match"
+    },
+    {
+      "code": 6005,
+      "name": "PlatformFeeRecipientNotMatch",
+      "msg": "Platform fee recipient not match"
+    },
+    {
+      "code": 6006,
+      "name": "StackFeeRecipientNotMatch",
+      "msg": "Stack fee recipient not match"
+    },
+    {
+      "code": 6007,
+      "name": "StackNotMatch",
+      "msg": "Stack not match"
+    },
+    {
+      "code": 6008,
+      "name": "DelegationEmpty",
+      "msg": "Delegation empty"
+    },
+    {
+      "code": 6009,
+      "name": "StakeAmountTooLow",
+      "msg": "Stake amount too low"
+    },
+    {
+      "code": 6010,
+      "name": "StakeAccountNotActive",
+      "msg": "Stake account not active"
+    },
+    {
+      "code": 6011,
+      "name": "StakeAccountActive",
+      "msg": "Stake account active"
+    },
+    {
+      "code": 6012,
+      "name": "StakeAccountWithLockup",
+      "msg": "Stake account with lockup"
+    },
+    {
+      "code": 6013,
+      "name": "UnstakeRecipientNotMatch",
+      "msg": "Unstake recipient not match"
+    },
+    {
+      "code": 6014,
+      "name": "ValidatorNotExist",
+      "msg": "Validator not exist"
+    },
+    {
+      "code": 6015,
+      "name": "ValidatorAlreadyExist",
+      "msg": "Validator already exist"
+    },
+    {
+      "code": 6016,
+      "name": "StakeManagerAlreadyExist",
+      "msg": "StakeManager already exist"
+    },
+    {
+      "code": 6017,
+      "name": "ValidatorNotMatch",
+      "msg": "Validator not match"
+    },
+    {
+      "code": 6018,
+      "name": "StakeAccountAlreadyExist",
+      "msg": "Stake account already exist"
+    },
+    {
+      "code": 6019,
+      "name": "SplitStakeAccountAlreadyExist",
+      "msg": "Split stake account already exist"
+    },
+    {
+      "code": 6020,
+      "name": "StakeAccountNotExist",
+      "msg": "Stake account not exist"
+    },
+    {
+      "code": 6021,
+      "name": "RentNotEnough",
+      "msg": "Rent not enough"
+    },
+    {
+      "code": 6022,
+      "name": "BalanceNotEnough",
+      "msg": "Balance not enough"
+    },
+    {
+      "code": 6023,
+      "name": "CalculationFail",
+      "msg": "Calulation fail"
+    },
+    {
+      "code": 6024,
+      "name": "AuthorityNotMatch",
+      "msg": "Authority not match"
+    },
+    {
+      "code": 6025,
+      "name": "EraIsLatest",
+      "msg": "Era is latest"
+    },
+    {
+      "code": 6026,
+      "name": "EraIsProcessing",
+      "msg": "Era is processing"
+    },
+    {
+      "code": 6027,
+      "name": "EraIsProcessed",
+      "msg": "Era is processed"
+    },
+    {
+      "code": 6028,
+      "name": "EraNoNeedBond",
+      "msg": "Era no need bond"
+    },
+    {
+      "code": 6029,
+      "name": "EraNoNeedSkipBond",
+      "msg": "Era no need skip bond"
+    },
+    {
+      "code": 6030,
+      "name": "EraNoNeedUnBond",
+      "msg": "Era no need unbond"
+    },
+    {
+      "code": 6031,
+      "name": "EraNoNeedUpdateActive",
+      "msg": "Era no need update active"
+    },
+    {
+      "code": 6032,
+      "name": "EraNoNeedUpdateRate",
+      "msg": "Era no need update rate"
+    },
+    {
+      "code": 6033,
+      "name": "AmountUnmatch",
+      "msg": "Amount unmatch"
+    },
+    {
+      "code": 6034,
+      "name": "InvalidUnstakeAccount",
+      "msg": "Invalid unstake account"
+    },
+    {
+      "code": 6035,
+      "name": "UnstakeAccountNotClaimable",
+      "msg": "Unstake account not claimable"
+    },
+    {
+      "code": 6036,
+      "name": "UnstakeAccountAmountZero",
+      "msg": "Unstake account amount zero"
+    },
+    {
+      "code": 6037,
+      "name": "PoolBalanceNotEnough",
+      "msg": "Pool balance not enough"
+    },
+    {
+      "code": 6038,
+      "name": "UnstakeAmountIsZero",
+      "msg": "Unstake amount is zero"
+    },
+    {
+      "code": 6039,
+      "name": "ValidatorsNotEqual",
+      "msg": "Validators not equal"
+    },
+    {
+      "code": 6040,
+      "name": "RateChangeOverLimit",
+      "msg": "Rate change over limit"
+    },
+    {
+      "code": 6041,
+      "name": "MintAccountNotMatch",
+      "msg": "Mint account not match"
+    },
+    {
+      "code": 6042,
+      "name": "MintAuthorityNotMatch",
+      "msg": "Mint authority not match"
+    },
+    {
+      "code": 6043,
+      "name": "FreezeAuthorityNotMatch",
+      "msg": "Freeze authority not match"
+    },
+    {
+      "code": 6044,
+      "name": "MintSupplyNotEmpty",
+      "msg": "Mint supply not empty"
+    },
+    {
+      "code": 6045,
+      "name": "MintToOwnerNotMatch",
+      "msg": "Mint to owner not match"
+    },
+    {
+      "code": 6046,
+      "name": "StakeAccountsLenOverLimit",
+      "msg": "Stake accounts len over limit"
+    }
+  ],
+  "types": [
+    {
+      "name": "EraProcessData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "need_bond",
+            "type": "u64"
+          },
+          {
+            "name": "need_unbond",
+            "type": "u64"
+          },
+          {
+            "name": "old_active",
+            "type": "u64"
+          },
+          {
+            "name": "new_active",
+            "type": "u64"
+          },
+          {
+            "name": "pending_stake_accounts",
+            "type": {
+              "vec": "pubkey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "EraRate",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "era",
+            "type": "u64"
+          },
+          {
+            "name": "rate",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Stack",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "stack_fee_commission",
+            "type": "u64"
+          },
+          {
+            "name": "stake_managers_len_limit",
+            "type": "u64"
+          },
+          {
+            "name": "entrusted_stake_managers",
+            "type": {
+              "vec": "pubkey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "StakeManager",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "balancer",
+            "type": "pubkey"
+          },
+          {
+            "name": "stack",
+            "type": "pubkey"
+          },
+          {
+            "name": "lsd_token_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "pool_seed_bump",
+            "type": "u8"
+          },
+          {
+            "name": "rent_exempt_for_pool_acc",
+            "type": "u64"
+          },
+          {
+            "name": "min_stake_amount",
+            "type": "u64"
+          },
+          {
+            "name": "platform_fee_commission",
+            "type": "u64"
+          },
+          {
+            "name": "stack_fee_commission",
+            "type": "u64"
+          },
+          {
+            "name": "rate_change_limit",
+            "type": "u64"
+          },
+          {
+            "name": "stake_accounts_len_limit",
+            "type": "u64"
+          },
+          {
+            "name": "split_accounts_len_limit",
+            "type": "u64"
+          },
+          {
+            "name": "unbonding_duration",
+            "type": "u64"
+          },
+          {
+            "name": "latest_era",
+            "type": "u64"
+          },
+          {
+            "name": "rate",
+            "type": "u64"
+          },
+          {
+            "name": "era_bond",
+            "type": "u64"
+          },
+          {
+            "name": "era_unbond",
+            "type": "u64"
+          },
+          {
+            "name": "active",
+            "type": "u64"
+          },
+          {
+            "name": "total_platform_fee",
+            "type": "u64"
+          },
+          {
+            "name": "validators",
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "stake_accounts",
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "split_accounts",
+            "type": {
+              "vec": "pubkey"
+            }
+          },
+          {
+            "name": "era_rates",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "EraRate"
+                }
+              }
+            }
+          },
+          {
+            "name": "era_process_data",
+            "type": {
+              "defined": {
+                "name": "EraProcessData"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "UnstakeAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "stake_manager",
+            "type": "pubkey"
+          },
+          {
+            "name": "recipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "created_epoch",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "StackFeeAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EventEraBond",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "era",
+            "type": "u64"
+          },
+          {
+            "name": "stake_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "bond_amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EventEraMerge",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "src_stake_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "dst_stake_account",
+            "type": "pubkey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EventEraNew",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "new_era",
+            "type": "u64"
+          },
+          {
+            "name": "need_bond",
+            "type": "u64"
+          },
+          {
+            "name": "need_unbond",
+            "type": "u64"
+          },
+          {
+            "name": "active",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EventEraSkipBond",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "era",
+            "type": "u64"
+          },
+          {
+            "name": "skip_bond_amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EventEraUnbond",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "era",
+            "type": "u64"
+          },
+          {
+            "name": "from_stake_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "split_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "unbond_amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EventEraUpdateActive",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "era",
+            "type": "u64"
+          },
+          {
+            "name": "stake_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "stake_amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EventEraUpdateRate",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "era",
+            "type": "u64"
+          },
+          {
+            "name": "rate",
+            "type": "u64"
+          },
+          {
+            "name": "platform_fee",
+            "type": "u64"
+          },
+          {
+            "name": "stack_fee",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EventEraWithdraw",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "era",
+            "type": "u64"
+          },
+          {
+            "name": "stake_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "withdraw_amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EventRedelegate",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "from_stake_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "to_stake_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "redelegate_amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EventStake",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "era",
+            "type": "u64"
+          },
+          {
+            "name": "staker",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint_to",
+            "type": "pubkey"
+          },
+          {
+            "name": "stake_amount",
+            "type": "u64"
+          },
+          {
+            "name": "lsd_token_amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EventUnstake",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "era",
+            "type": "u64"
+          },
+          {
+            "name": "staker",
+            "type": "pubkey"
+          },
+          {
+            "name": "burn_lsd_token_from",
+            "type": "pubkey"
+          },
+          {
+            "name": "unstake_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "unstake_amount",
+            "type": "u64"
+          },
+          {
+            "name": "sol_amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EventWithdraw",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "era",
+            "type": "u64"
+          },
+          {
+            "name": "staker",
+            "type": "pubkey"
+          },
+          {
+            "name": "unstake_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "withdraw_amount",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ]
+}
