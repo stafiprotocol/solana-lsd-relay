@@ -49,6 +49,7 @@ func stakeManagerDetailCmd() *cobra.Command {
 			}
 
 			programId := getAccountInfoRes.Value.Owner
+			fmt.Printf("programId: %s\n", programId)
 			stakePool, _, err := solana.FindProgramAddress([][]byte{stakeManagerPubkey.Bytes(), stakePoolSeed}, programId)
 			if err != nil {
 				return err
@@ -59,8 +60,8 @@ func stakeManagerDetailCmd() *cobra.Command {
 				return err
 			}
 
+			fmt.Printf("stakePool: %s\n", stakePool)
 			fmt.Printf("stakeManager: \n%s\n", string(jsonBts))
-			fmt.Printf("stakePool: \n%s\n", stakePool)
 			return nil
 		},
 	}
