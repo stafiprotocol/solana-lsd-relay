@@ -149,7 +149,7 @@ func stakeManagerInitCmd() *cobra.Command {
 				initInstruction,
 			}
 
-			_, err = AdminExecuteInstructions("initialize stake manager", rpcClient, instructions, cfg.KeystorePath, feePayerPubkey, adminPubkey, false)
+			_, err = adminExecuteInstructions("initialize stake manager", rpcClient, instructions, cfg.KeystorePath, feePayerPubkey, adminPubkey, false)
 			return err
 		},
 	}

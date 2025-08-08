@@ -73,7 +73,7 @@ func stakeManagerAddValidator() *cobra.Command {
 				5,                       // limit of requests per time frame
 			))
 
-			_, err = AdminExecuteInstructions("add validator", rpcClient, instructions, cfg.KeystorePath, feePayerPubkey, adminPubkey, exportTxMessage)
+			_, err = adminExecuteInstructions("add validator", rpcClient, instructions, cfg.KeystorePath, feePayerPubkey, adminPubkey, exportTxMessage)
 			if err != nil {
 				return err
 			}

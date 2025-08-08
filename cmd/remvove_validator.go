@@ -73,7 +73,7 @@ func stakeManagerRemoveValidator() *cobra.Command {
 				5,                       // limit of requests per time frame
 			))
 
-			_, err = AdminExecuteInstructions("remove validator", rpcClient, instructions, cfg.KeystorePath, feePayerPubkey, adminPubkey, exportTxMessage)
+			_, err = adminExecuteInstructions("remove validator", rpcClient, instructions, cfg.KeystorePath, feePayerPubkey, adminPubkey, exportTxMessage)
 			if err != nil {
 				return err
 			}

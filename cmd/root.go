@@ -111,7 +111,7 @@ func Execute() {
 	}
 }
 
-func AdminExecuteInstructions(
+func adminExecuteInstructions(
 	action string,
 	rpcClient *rpc.Client,
 	instructions []solana.Instruction,
@@ -161,7 +161,7 @@ func AdminExecuteInstructions(
 		if err = utils.SignAndSendTx(rpcClient, tx, utils.GetSignFunc(feePayerAccount, adminAccount), latestBlockHashRes.Value.LastValidBlockHeight); err != nil {
 			return nil, fmt.Errorf("sign and send tx failed: %w", err)
 		}
-		fmt.Println(action, "txHash:", tx.Signatures[0].String())
+		fmt.Println(action, "tx hash:", tx.Signatures[0].String())
 		return tx, nil
 	}
 }

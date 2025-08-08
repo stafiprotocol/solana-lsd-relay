@@ -76,7 +76,7 @@ func stakeManagerSetUnbondingDurationCmd() *cobra.Command {
 				5,                       // limit of requests per time frame
 			))
 
-			_, err = AdminExecuteInstructions("set unbonding duration", rpcClient, instructions, cfg.KeystorePath, feePayerPubkey, adminPubkey, exportTxMessage)
+			_, err = adminExecuteInstructions("set unbonding duration", rpcClient, instructions, cfg.KeystorePath, feePayerPubkey, adminPubkey, exportTxMessage)
 			return err
 		},
 	}

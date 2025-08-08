@@ -105,7 +105,7 @@ func GetAndDecodeAccountInfo(rpcClient *rpc.Client, account solana.PublicKey, v 
 		return err
 	}
 
-	return bin.NewBorshDecoder(accountInfo.Value.Data.GetBinary()).Decode(v)
+	return bin.NewBorshDecoder(accountInfo.Value.Data.GetBinary()[8:]).Decode(v)
 }
 
 func GetSignFunc(feePayerAccount solana.PrivateKey, otherAccounts ...solana.PrivateKey) func(key solana.PublicKey) *solana.PrivateKey {

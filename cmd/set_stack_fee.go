@@ -73,7 +73,7 @@ func setStackFee() *cobra.Command {
 				5,                       // limit of requests per time frame
 			))
 
-			_, err = AdminExecuteInstructions("set stack fee", rpcClient, instructions, cfg.KeystorePath, feePayerPubkey, adminPubkey, exportTxMessage)
+			_, err = adminExecuteInstructions("set stack fee", rpcClient, instructions, cfg.KeystorePath, feePayerPubkey, adminPubkey, exportTxMessage)
 			return err
 		},
 	}

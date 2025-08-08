@@ -76,7 +76,7 @@ func stackInitCmd() *cobra.Command {
 				5,                       // limit of requests per time frame
 			))
 
-			_, err = AdminExecuteInstructions(
+			_, err = adminExecuteInstructions(
 				"initialize stack",
 				rpcClient,
 				[]solana.Instruction{initializeStackInstruction},
