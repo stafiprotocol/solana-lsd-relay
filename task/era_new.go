@@ -64,5 +64,5 @@ func (t *Task) EraNew(stakeManagerPubkey solana.PublicKey) error {
 		return nil
 	}
 
-	return fmt.Errorf("EraNew failed err: %w", err.Error())
+	return fmt.Errorf("EraNew failed err: %w", err)
 }

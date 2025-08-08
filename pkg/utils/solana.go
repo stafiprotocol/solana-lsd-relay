@@ -6,10 +6,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/decred/base58"
 	bin "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
 	computebudget "github.com/gagliardetto/solana-go/programs/compute-budget"
 	"github.com/gagliardetto/solana-go/rpc"
+	"github.com/sirupsen/logrus"
 )
 
 var ErrExpired = fmt.Errorf("expired")
@@ -76,6 +78,14 @@ func SignAndSendTx(
 	signFunc func(key solana.PublicKey) *solana.PrivateKey,
 	lastValidBlockHeight uint64,
 ) error {
+	if logrus.GetLevel() == logrus.DebugLevel || logrus.GetLevel() == logrus.TraceLevel {
+		bytes, err := tx.Message.MarshalBinary()
+		if err != nil {
+			return fmt.Errorf("fail to marshal tx.Message: %w", err)
+		}
+		logrus.Debugf("raw base58 encoded transaction message: %s", base58.Encode(bytes))
+	}
+
 	_, err := tx.Sign(signFunc)
 	if err != nil {
 		return fmt.Errorf("sign failed, err: %s", err.Error())
