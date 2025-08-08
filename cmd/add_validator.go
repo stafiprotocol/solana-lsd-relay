@@ -61,7 +61,7 @@ func stakeManagerAddValidator() *cobra.Command {
 				}
 			}
 
-			instruction := lsd_program.NewAddValidatorInstruction(stakeManagerPubkey, adminPubkey, addValidatorPubkey).Build()
+			instruction := lsd_program.NewAddValidatorInstruction(addValidatorPubkey, stakeManagerPubkey, adminPubkey).Build()
 			instructions := []solana.Instruction{instruction}
 
 			rpcClient := rpc.NewWithCustomRPCClient(rpc.NewWithLimiter(
