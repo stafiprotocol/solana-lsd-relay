@@ -73,12 +73,8 @@ func setStackFee() *cobra.Command {
 				5,                       // limit of requests per time frame
 			))
 
-			tx, err := AdminExecuteInstructions(rpcClient, instructions, cfg.KeystorePath, feePayerPubkey, adminPubkey, exportTxMessage)
-			if err != nil {
-				return err
-			}
-			fmt.Println("setStackFee txHash:", tx.Signatures[0].String())
-			return nil
+			_, err = AdminExecuteInstructions("set stack fee", rpcClient, instructions, cfg.KeystorePath, feePayerPubkey, adminPubkey, exportTxMessage)
+			return err
 		},
 	}
 	cmd.Flags().String(flagConfigPath, defaultConfigPath, "Config file path")

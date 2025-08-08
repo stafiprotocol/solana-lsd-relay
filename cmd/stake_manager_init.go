@@ -28,11 +28,6 @@ func stakeManagerInitCmd() *cobra.Command {
 		Short: "Init stake manager",
 
 		RunE: func(cmd *cobra.Command, args []string) error {
-			exportTxMessage, err := cmd.Flags().GetBool(flagExportTx)
-			if err != nil {
-				return err
-			}
-
 			configPath, err := cmd.Flags().GetString(flagConfigPath)
 			if err != nil {
 				return err
@@ -154,15 +149,10 @@ func stakeManagerInitCmd() *cobra.Command {
 				initInstruction,
 			}
 
-			tx, err := AdminExecuteInstructions(rpcClient, instructions, cfg.KeystorePath, feePayerPubkey, adminPubkey, exportTxMessage)
-			if err != nil {
-				return err
-			}
-			fmt.Println("initializeStakeManager txHash:", tx.Signatures[0].String())
-			return nil
+			_, err = AdminExecuteInstructions("initialize stake manager", rpcClient, instructions, cfg.KeystorePath, feePayerPubkey, adminPubkey, false)
+			return err
 		},
 	}
 	cmd.Flags().String(flagConfigPath, defaultConfigPath, "Config file path")
-	cmd.Flags().Bool(flagExportTx, false, "Export tx message")
 	return cmd
 }

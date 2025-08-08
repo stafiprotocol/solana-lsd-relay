@@ -112,6 +112,7 @@ func Execute() {
 }
 
 func AdminExecuteInstructions(
+	action string,
 	rpcClient *rpc.Client,
 	instructions []solana.Instruction,
 	keystorePath string,
@@ -133,9 +134,9 @@ func AdminExecuteInstructions(
 		if err != nil {
 			return tx, fmt.Errorf("fail to marshal tx.Message: %w", err)
 		}
-		fmt.Println("tx:")
+		fmt.Println(action, "tx(base58):")
 		fmt.Println(base58.Encode(bytes))
-		return tx, nil
+		return nil, nil
 	} else {
 		tx, err := utils.NewSolanaTransaction(latestBlockHashRes.Value.Blockhash, instructions, feePayerPubkey, true)
 		if err != nil {
@@ -157,6 +158,10 @@ func AdminExecuteInstructions(
 			return nil, fmt.Errorf("admin not exit in vault")
 		}
 
-		return tx, utils.SignAndSendTx(rpcClient, tx, utils.GetSignFunc(feePayerAccount, adminAccount), latestBlockHashRes.Value.LastValidBlockHeight)
+		if err = utils.SignAndSendTx(rpcClient, tx, utils.GetSignFunc(feePayerAccount, adminAccount), latestBlockHashRes.Value.LastValidBlockHeight); err != nil {
+			return nil, fmt.Errorf("sign and send tx failed: %w", err)
+		}
+		fmt.Println(action, "txHash:", tx.Signatures[0].String())
+		return tx, nil
 	}
 }

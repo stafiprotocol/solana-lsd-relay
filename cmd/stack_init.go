@@ -7,7 +7,6 @@ import (
 
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
-	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/stafiprotocol/solana-lsd-relay/pkg/config"
 	"github.com/stafiprotocol/solana-lsd-relay/pkg/lsd_program"
@@ -77,7 +76,8 @@ func stackInitCmd() *cobra.Command {
 				5,                       // limit of requests per time frame
 			))
 
-			tx, err := AdminExecuteInstructions(
+			_, err = AdminExecuteInstructions(
+				"initialize stack",
 				rpcClient,
 				[]solana.Instruction{initializeStackInstruction},
 				cfg.KeystorePath,
@@ -87,17 +87,11 @@ func stackInitCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			txHash := tx.Signatures[0]
-			logrus.Infof("initializeStackAccount send tx hash: %s", txHash)
-			if err == nil {
-				logrus.Infof("initializeStack success")
-				return nil
-			}
 
 			retry := 0
 			for {
 				if retry > 60 {
-					return fmt.Errorf("tx %s failed", txHash)
+					return fmt.Errorf("tx failed")
 				}
 				_, err := rpcClient.GetAccountInfo(context.Background(), stackAccount.PublicKey())
 				if err != nil {

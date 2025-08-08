@@ -73,11 +73,10 @@ func addEntrustedStakeManager() *cobra.Command {
 				5,                       // limit of requests per time frame
 			))
 
-			tx, err := AdminExecuteInstructions(rpcClient, instructions, cfg.KeystorePath, feePayerPubkey, adminPubkey, exportTxMessage)
+			_, err = AdminExecuteInstructions("add entrusted stake manager", rpcClient, instructions, cfg.KeystorePath, feePayerPubkey, adminPubkey, exportTxMessage)
 			if err != nil {
 				return err
 			}
-			fmt.Println("addEntrustedStakeManager txHash:", tx.Signatures[0].String())
 			return nil
 		},
 	}
