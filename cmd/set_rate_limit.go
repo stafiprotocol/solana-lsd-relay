@@ -60,10 +60,7 @@ func stakeManagerSetRateLimitCmd() *cobra.Command {
 				}
 			}
 
-			instruction, err := lsd_program.NewSetRateChangeLimitInstruction(cfg.RateChangeLimit, stakeManagerPubkey, adminPubkey)
-			if err != nil {
-				return fmt.Errorf("NewSetRateChangeLimitInstruction failed, err: %s", err.Error())
-			}
+			instruction := lsd_program.NewSetRateChangeLimitInstruction(cfg.RateChangeLimit, stakeManagerPubkey, adminPubkey).Build()
 			instructions := []solana.Instruction{instruction}
 
 			rpcClient := rpc.NewWithCustomRPCClient(rpc.NewWithLimiter(

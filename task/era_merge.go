@@ -62,7 +62,7 @@ func (t *Task) EraMerge(stakeManagerPubkey solana.PublicKey) error {
 			srcStakeAccount := accounts[1]
 			dstStakeAccount := accounts[0]
 
-			eraMergeInstruction, err := lsd_program.NewEraMergeInstruction(
+			eraMergeInstruction := lsd_program.NewEraMergeInstruction(
 				stakeManagerPubkey,
 				srcStakeAccount,
 				dstStakeAccount,
@@ -70,10 +70,7 @@ func (t *Task) EraMerge(stakeManagerPubkey solana.PublicKey) error {
 				solana.SysVarClockPubkey,
 				solana.SysVarStakeHistoryPubkey,
 				solana.StakeProgramID,
-			)
-			if err != nil {
-				return fmt.Errorf("new era merge instruction error: %w", err)
-			}
+			).Build()
 
 			latestBlockHashRes, err := t.client.GetLatestBlockhash(context.Background(), rpc.CommitmentConfirmed)
 			if err != nil {

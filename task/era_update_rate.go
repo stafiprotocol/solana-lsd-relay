@@ -88,7 +88,7 @@ func (t *Task) EraUpdateRate(stakeManagerPubkey solana.PublicKey) error {
 		return fmt.Errorf("lsd token mint account owner is not token2022 or token program")
 	}
 
-	eraUpdateRateInstruction, err := lsd_program.NewEraUpdateRateInstruction(
+	eraUpdateRateInstruction := lsd_program.NewEraUpdateRateInstruction(
 		stakeManagerPubkey,
 		t.stackAccountPubkey,
 		stakePool,
@@ -98,10 +98,8 @@ func (t *Task) EraUpdateRate(stakeManagerPubkey solana.PublicKey) error {
 		stackFeeAccount,
 		associatedtokenaccount.ProgramID,
 		tokenProgramAccount,
-	)
-	if err != nil {
-		return err
-	}
+	).Build()
+
 	instructions = append(instructions, eraUpdateRateInstruction)
 
 	latestBlockHashRes, err := t.client.GetLatestBlockhash(context.Background(), rpc.CommitmentConfirmed)

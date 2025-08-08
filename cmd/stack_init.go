@@ -60,15 +60,12 @@ func stackInitCmd() *cobra.Command {
 				}
 			}
 
-			initializeStackInstruction, err := lsd_program.NewInitializeStackInstruction(
+			initializeStackInstruction := lsd_program.NewInitializeStackInstruction(
 				stackAccount.PublicKey(),
 				feePayerAccountPubkey,
 				adminAccountPubkey,
 				solana.SystemProgramID,
-			)
-			if err != nil {
-				return fmt.Errorf("new initialize stack instruction error: %w", err)
-			}
+			).Build()
 
 			rpcClient := rpc.NewWithCustomRPCClient(rpc.NewWithLimiter(
 				cfg.EndpointList[0],

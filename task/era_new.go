@@ -30,10 +30,7 @@ func (t *Task) EraNew(stakeManagerPubkey solana.PublicKey) error {
 		return nil
 	}
 
-	eraNewInstruction, err := lsd_program.NewEraNewInstruction(stakeManagerPubkey, solana.SysVarClockPubkey)
-	if err != nil {
-		return err
-	}
+	eraNewInstruction := lsd_program.NewEraNewInstruction(stakeManagerPubkey, solana.SysVarClockPubkey).Build()
 
 	latestBlockHashRes, err := t.client.GetLatestBlockhash(context.Background(), rpc.CommitmentConfirmed)
 	if err != nil {

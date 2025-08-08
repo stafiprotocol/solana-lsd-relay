@@ -61,10 +61,7 @@ func setStackFee() *cobra.Command {
 					continue
 				}
 			}
-			instruction, err := lsd_program.NewSetPlatformStackFeeCommissionInstruction(cfg.StackFeeCommission, stakeManagerPubkey, stackPubkey, adminPubkey)
-			if err != nil {
-				return fmt.Errorf("NewSetPlatformStackFeeCommissionInstruction failed, err: %s", err.Error())
-			}
+			instruction := lsd_program.NewSetPlatformStackFeeCommissionInstruction(cfg.StackFeeCommission, stakeManagerPubkey, stackPubkey, adminPubkey).Build()
 			instructions := []solana.Instruction{instruction}
 
 			rpcClient := rpc.NewWithCustomRPCClient(rpc.NewWithLimiter(

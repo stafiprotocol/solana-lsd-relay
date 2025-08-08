@@ -43,17 +43,14 @@ func (t *Task) EraWithdraw(stakeManagerPubkey solana.PublicKey) error {
 			return fmt.Errorf("get stake account info error: %w", err)
 		}
 
-		eraWithdrawInstruction, err := lsd_program.NewEraWithdrawInstruction(
+		eraWithdrawInstruction := lsd_program.NewEraWithdrawInstruction(
 			stakeManagerPubkey,
 			stakePool,
 			stakeAccount,
 			solana.SysVarClockPubkey,
 			solana.SysVarStakeHistoryPubkey,
 			solana.StakeProgramID,
-		)
-		if err != nil {
-			return fmt.Errorf("new era withdraw instruction error: %w", err)
-		}
+		).Build()
 
 		latestBlockHashRes, err := t.client.GetLatestBlockhash(context.Background(), rpc.CommitmentConfirmed)
 		if err != nil {

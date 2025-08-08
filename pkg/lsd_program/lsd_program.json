@@ -1,327 +1,263 @@
 {
-  "address": "8ufkkVBM6s52WRnhdF2yUCu1eNPnS123SoVKv8wyBFAp",
-  "metadata": {
-    "name": "lsd_program",
-    "version": "0.1.0",
-    "spec": "0.1.0"
-  },
+  "version": "0.1.0",
+  "name": "lsd_program",
   "instructions": [
     {
-      "name": "initialize_stack",
-      "discriminator": [
-        139,
-        248,
-        249,
-        177,
-        239,
-        66,
-        51,
-        252
-      ],
+      "name": "initializeStack",
       "accounts": [
         {
           "name": "stack",
-          "writable": true,
-          "signer": true
+          "isMut": true,
+          "isSigner": true
         },
         {
-          "name": "rent_payer",
-          "writable": true,
-          "signer": true
+          "name": "rentPayer",
+          "isMut": true,
+          "isSigner": true
         },
         {
           "name": "admin",
-          "signer": true
+          "isMut": false,
+          "isSigner": true
         },
         {
-          "name": "system_program"
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": []
     },
     {
-      "name": "initialize_stake_manager",
-      "discriminator": [
-        75,
-        220,
-        4,
-        110,
-        166,
-        194,
-        173,
-        1
-      ],
+      "name": "initializeStakeManager",
       "accounts": [
         {
-          "name": "stake_manager",
-          "writable": true
+          "name": "stakeManager",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          "name": "stack"
+          "name": "stack",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "stake_pool"
+          "name": "stakePool",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "stack_fee_account",
-          "writable": true
+          "name": "stackFeeAccount",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          "name": "lsd_token_mint"
+          "name": "lsdTokenMint",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "validator"
+          "name": "validator",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "rent_payer",
-          "writable": true,
-          "signer": true
+          "name": "rentPayer",
+          "isMut": true,
+          "isSigner": true
         },
         {
           "name": "admin",
-          "signer": true
+          "isMut": false,
+          "isSigner": true
         },
         {
-          "name": "associated_token_program"
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "system_program"
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "clock"
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "rent"
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": []
     },
     {
-      "name": "transfer_stack_admin",
-      "discriminator": [
-        239,
-        183,
-        112,
-        103,
-        100,
-        99,
-        128,
-        84
-      ],
+      "name": "transferStackAdmin",
       "accounts": [
         {
           "name": "stack",
-          "writable": true
+          "isMut": true,
+          "isSigner": false
         },
         {
           "name": "admin",
-          "signer": true
+          "isMut": false,
+          "isSigner": true
         }
       ],
       "args": [
         {
-          "name": "new_admin",
-          "type": "pubkey"
+          "name": "newAdmin",
+          "type": "publicKey"
         }
       ]
     },
     {
-      "name": "set_stack_fee_commission",
-      "discriminator": [
-        170,
-        16,
-        193,
-        90,
-        33,
-        62,
-        62,
-        97
-      ],
+      "name": "setStackFeeCommission",
       "accounts": [
         {
           "name": "stack",
-          "writable": true
+          "isMut": true,
+          "isSigner": false
         },
         {
           "name": "admin",
-          "signer": true
+          "isMut": false,
+          "isSigner": true
         }
       ],
       "args": [
         {
-          "name": "stack_fee_commission",
+          "name": "stackFeeCommission",
           "type": "u64"
         }
       ]
     },
     {
-      "name": "set_platform_stack_fee_commission",
-      "discriminator": [
-        85,
-        251,
-        61,
-        253,
-        7,
-        73,
-        13,
-        178
-      ],
+      "name": "setPlatformStackFeeCommission",
       "accounts": [
         {
-          "name": "stake_manager",
-          "writable": true
+          "name": "stakeManager",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          "name": "stack"
+          "name": "stack",
+          "isMut": false,
+          "isSigner": false
         },
         {
           "name": "admin",
-          "signer": true
+          "isMut": false,
+          "isSigner": true
         }
       ],
       "args": [
         {
-          "name": "stack_fee_commission",
+          "name": "stackFeeCommission",
           "type": "u64"
         }
       ]
     },
     {
-      "name": "add_entrusted_stake_manager",
-      "discriminator": [
-        81,
-        65,
-        28,
-        165,
-        239,
-        10,
-        152,
-        193
-      ],
+      "name": "addEntrustedStakeManager",
       "accounts": [
         {
           "name": "stack",
-          "writable": true
+          "isMut": true,
+          "isSigner": false
         },
         {
           "name": "admin",
-          "signer": true
+          "isMut": false,
+          "isSigner": true
         }
       ],
       "args": [
         {
-          "name": "stake_manager",
-          "type": "pubkey"
+          "name": "stakeManager",
+          "type": "publicKey"
         }
       ]
     },
     {
-      "name": "remove_entrusted_stake_manager",
-      "discriminator": [
-        232,
-        175,
-        69,
-        153,
-        85,
-        181,
-        33,
-        160
-      ],
+      "name": "removeEntrustedStakeManager",
       "accounts": [
         {
           "name": "stack",
-          "writable": true
+          "isMut": true,
+          "isSigner": false
         },
         {
           "name": "admin",
-          "signer": true
+          "isMut": false,
+          "isSigner": true
         }
       ],
       "args": [
         {
-          "name": "stake_manager",
-          "type": "pubkey"
+          "name": "stakeManager",
+          "type": "publicKey"
         }
       ]
     },
     {
-      "name": "transfer_stake_manager_admin",
-      "discriminator": [
-        225,
-        28,
-        79,
-        223,
-        28,
-        96,
-        210,
-        226
-      ],
+      "name": "transferStakeManagerAdmin",
       "accounts": [
         {
-          "name": "stake_manager",
-          "writable": true
+          "name": "stakeManager",
+          "isMut": true,
+          "isSigner": false
         },
         {
           "name": "admin",
-          "signer": true
+          "isMut": false,
+          "isSigner": true
         }
       ],
       "args": [
         {
-          "name": "new_admin",
-          "type": "pubkey"
+          "name": "newAdmin",
+          "type": "publicKey"
         }
       ]
     },
     {
-      "name": "transfer_balancer",
-      "discriminator": [
-        99,
-        139,
-        245,
-        206,
-        226,
-        124,
-        106,
-        83
-      ],
+      "name": "transferBalancer",
       "accounts": [
         {
-          "name": "stake_manager",
-          "writable": true
+          "name": "stakeManager",
+          "isMut": true,
+          "isSigner": false
         },
         {
           "name": "admin",
-          "signer": true
+          "isMut": false,
+          "isSigner": true
         }
       ],
       "args": [
         {
-          "name": "new_balancer",
-          "type": "pubkey"
+          "name": "newBalancer",
+          "type": "publicKey"
         }
       ]
     },
     {
-      "name": "set_min_stake_amount",
-      "discriminator": [
-        30,
-        179,
-        162,
-        249,
-        158,
-        57,
-        14,
-        254
-      ],
+      "name": "setMinStakeAmount",
       "accounts": [
         {
-          "name": "stake_manager",
-          "writable": true
+          "name": "stakeManager",
+          "isMut": true,
+          "isSigner": false
         },
         {
           "name": "admin",
-          "signer": true
+          "isMut": false,
+          "isSigner": true
         }
       ],
       "args": [
@@ -332,25 +268,17 @@
       ]
     },
     {
-      "name": "set_unbonding_duration",
-      "discriminator": [
-        143,
-        183,
-        204,
-        237,
-        156,
-        203,
-        133,
-        250
-      ],
+      "name": "setUnbondingDuration",
       "accounts": [
         {
-          "name": "stake_manager",
-          "writable": true
+          "name": "stakeManager",
+          "isMut": true,
+          "isSigner": false
         },
         {
           "name": "admin",
-          "signer": true
+          "isMut": false,
+          "isSigner": true
         }
       ],
       "args": [
@@ -361,675 +289,633 @@
       ]
     },
     {
-      "name": "set_rate_change_limit",
-      "discriminator": [
-        13,
-        141,
-        180,
-        253,
-        190,
-        210,
-        229,
-        210
-      ],
+      "name": "setRateChangeLimit",
       "accounts": [
         {
-          "name": "stake_manager",
-          "writable": true
+          "name": "stakeManager",
+          "isMut": true,
+          "isSigner": false
         },
         {
           "name": "admin",
-          "signer": true
+          "isMut": false,
+          "isSigner": true
         }
       ],
       "args": [
         {
-          "name": "rate_change_limit",
+          "name": "rateChangeLimit",
           "type": "u64"
         }
       ]
     },
     {
-      "name": "set_platform_fee_commission",
-      "discriminator": [
-        193,
-        162,
-        133,
-        226,
-        38,
-        87,
-        16,
-        252
-      ],
+      "name": "setPlatformFeeCommission",
       "accounts": [
         {
-          "name": "stake_manager",
-          "writable": true
+          "name": "stakeManager",
+          "isMut": true,
+          "isSigner": false
         },
         {
           "name": "admin",
-          "signer": true
+          "isMut": false,
+          "isSigner": true
         }
       ],
       "args": [
         {
-          "name": "protocol_fee_commission",
+          "name": "protocolFeeCommission",
           "type": "u64"
         }
       ]
     },
     {
-      "name": "add_validator",
-      "discriminator": [
-        250,
-        113,
-        53,
-        54,
-        141,
-        117,
-        215,
-        185
-      ],
+      "name": "addValidator",
       "accounts": [
         {
-          "name": "stake_manager",
-          "writable": true
+          "name": "stakeManager",
+          "isMut": true,
+          "isSigner": false
         },
         {
           "name": "admin",
-          "signer": true
+          "isMut": false,
+          "isSigner": true
         }
       ],
       "args": [
         {
-          "name": "new_validator",
-          "type": "pubkey"
+          "name": "newValidator",
+          "type": "publicKey"
         }
       ]
     },
     {
-      "name": "remove_validator",
-      "discriminator": [
-        25,
-        96,
-        211,
-        155,
-        161,
-        14,
-        168,
-        188
-      ],
+      "name": "removeValidator",
       "accounts": [
         {
-          "name": "stake_manager",
-          "writable": true
+          "name": "stakeManager",
+          "isMut": true,
+          "isSigner": false
         },
         {
           "name": "admin",
-          "signer": true
+          "isMut": false,
+          "isSigner": true
         }
       ],
       "args": [
         {
-          "name": "remove_validator",
-          "type": "pubkey"
+          "name": "removeValidator",
+          "type": "publicKey"
         }
       ]
     },
     {
-      "name": "realloc_stake_manager",
-      "discriminator": [
-        124,
-        76,
-        19,
-        251,
-        234,
-        127,
-        12,
-        141
-      ],
+      "name": "reallocStakeManager",
       "accounts": [
         {
-          "name": "stake_manager",
-          "writable": true
+          "name": "stakeManager",
+          "isMut": true,
+          "isSigner": false
         },
         {
           "name": "admin",
-          "signer": true
+          "isMut": false,
+          "isSigner": true
         },
         {
-          "name": "rent_payer",
-          "writable": true,
-          "signer": true
+          "name": "rentPayer",
+          "isMut": true,
+          "isSigner": true
         },
         {
-          "name": "system_program"
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": [
         {
-          "name": "new_size",
+          "name": "newSize",
           "type": "u32"
         }
       ]
     },
     {
       "name": "redelegate",
-      "discriminator": [
-        212,
-        82,
-        51,
-        160,
-        228,
-        80,
-        116,
-        35
-      ],
       "accounts": [
         {
-          "name": "stake_manager",
-          "writable": true
+          "name": "stakeManager",
+          "isMut": true,
+          "isSigner": false
         },
         {
           "name": "balancer",
-          "signer": true
+          "isMut": false,
+          "isSigner": true
         },
         {
-          "name": "to_validator",
-          "writable": true
+          "name": "toValidator",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          "name": "stake_pool"
+          "name": "stakePool",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "from_stake_account",
-          "writable": true
+          "name": "fromStakeAccount",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          "name": "split_stake_account",
-          "writable": true,
-          "signer": true
+          "name": "splitStakeAccount",
+          "isMut": true,
+          "isSigner": true
         },
         {
-          "name": "to_stake_account",
-          "writable": true,
-          "signer": true
+          "name": "toStakeAccount",
+          "isMut": true,
+          "isSigner": true
         },
         {
-          "name": "rent_payer",
-          "writable": true,
-          "signer": true
+          "name": "rentPayer",
+          "isMut": true,
+          "isSigner": true
         },
         {
-          "name": "clock"
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "stake_config"
+          "name": "stakeConfig",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "stake_history"
+          "name": "stakeHistory",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "stake_program"
+          "name": "stakeProgram",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "system_program"
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": [
         {
-          "name": "redelegate_amount",
+          "name": "redelegateAmount",
           "type": "u64"
         }
       ]
     },
     {
       "name": "stake",
-      "discriminator": [
-        206,
-        176,
-        202,
-        18,
-        200,
-        209,
-        179,
-        108
-      ],
       "accounts": [
         {
-          "name": "stake_manager",
-          "writable": true
+          "name": "stakeManager",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          "name": "stake_pool",
-          "writable": true
+          "name": "stakePool",
+          "isMut": true,
+          "isSigner": false
         },
         {
           "name": "from",
-          "writable": true,
-          "signer": true
+          "isMut": true,
+          "isSigner": true
         },
         {
-          "name": "lsd_token_mint",
-          "writable": true
+          "name": "lsdTokenMint",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          "name": "mint_to",
-          "writable": true
+          "name": "mintTo",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          "name": "system_program"
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "token_program"
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": [
         {
-          "name": "stake_amount",
+          "name": "stakeAmount",
           "type": "u64"
         }
       ]
     },
     {
       "name": "unstake",
-      "discriminator": [
-        90,
-        95,
-        107,
-        42,
-        205,
-        124,
-        50,
-        225
-      ],
       "accounts": [
         {
-          "name": "stake_manager",
-          "writable": true
+          "name": "stakeManager",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          "name": "lsd_token_mint",
-          "writable": true
+          "name": "lsdTokenMint",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          "name": "burn_lsd_token_from",
-          "writable": true
+          "name": "burnLsdTokenFrom",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          "name": "burn_lsd_token_authority",
-          "signer": true
+          "name": "burnLsdTokenAuthority",
+          "isMut": false,
+          "isSigner": true
         },
         {
-          "name": "unstake_account",
-          "writable": true,
-          "signer": true
+          "name": "unstakeAccount",
+          "isMut": true,
+          "isSigner": true
         },
         {
-          "name": "rent_payer",
-          "writable": true,
-          "signer": true
+          "name": "rentPayer",
+          "isMut": true,
+          "isSigner": true
         },
         {
-          "name": "system_program"
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "token_program"
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "clock"
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "rent"
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": [
         {
-          "name": "unstake_amount",
+          "name": "unstakeAmount",
           "type": "u64"
         }
       ]
     },
     {
       "name": "withdraw",
-      "discriminator": [
-        183,
-        18,
-        70,
-        156,
-        148,
-        109,
-        161,
-        34
-      ],
       "accounts": [
         {
-          "name": "stake_manager",
-          "writable": true
+          "name": "stakeManager",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          "name": "stake_pool",
-          "writable": true
+          "name": "stakePool",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          "name": "unstake_account",
-          "writable": true
+          "name": "unstakeAccount",
+          "isMut": true,
+          "isSigner": false
         },
         {
           "name": "recipient",
-          "writable": true
+          "isMut": true,
+          "isSigner": false
         },
         {
-          "name": "clock"
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "system_program"
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": []
     },
     {
-      "name": "era_new",
-      "discriminator": [
-        96,
-        178,
-        91,
-        52,
-        66,
-        223,
-        134,
-        98
-      ],
+      "name": "eraNew",
       "accounts": [
         {
-          "name": "stake_manager",
-          "writable": true
+          "name": "stakeManager",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          "name": "clock"
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": []
     },
     {
-      "name": "era_bond",
-      "discriminator": [
-        44,
-        238,
-        86,
-        188,
-        197,
-        69,
-        241,
-        91
-      ],
+      "name": "eraBond",
       "accounts": [
         {
-          "name": "stake_manager",
-          "writable": true
+          "name": "stakeManager",
+          "isMut": true,
+          "isSigner": false
         },
         {
           "name": "validator",
-          "writable": true
+          "isMut": true,
+          "isSigner": false
         },
         {
-          "name": "stake_pool",
-          "writable": true
+          "name": "stakePool",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          "name": "stake_account",
-          "writable": true,
-          "signer": true
+          "name": "stakeAccount",
+          "isMut": true,
+          "isSigner": true
         },
         {
-          "name": "rent_payer",
-          "writable": true,
-          "signer": true
+          "name": "rentPayer",
+          "isMut": true,
+          "isSigner": true
         },
         {
-          "name": "clock"
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "rent"
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "stake_config"
+          "name": "stakeConfig",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "stake_history"
+          "name": "stakeHistory",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "stake_program"
+          "name": "stakeProgram",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "system_program"
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": []
     },
     {
-      "name": "era_skip_bond",
-      "discriminator": [
-        191,
-        75,
-        28,
-        113,
-        210,
-        201,
-        136,
-        19
-      ],
+      "name": "eraSkipBond",
       "accounts": [
         {
-          "name": "stake_manager",
-          "writable": true
+          "name": "stakeManager",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          "name": "stake_program"
+          "name": "stakeProgram",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": []
     },
     {
-      "name": "era_unbond",
-      "discriminator": [
-        193,
-        62,
-        151,
-        104,
-        91,
-        68,
-        92,
-        148
-      ],
+      "name": "eraUnbond",
       "accounts": [
         {
-          "name": "stake_manager",
-          "writable": true
+          "name": "stakeManager",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          "name": "stake_pool"
+          "name": "stakePool",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "from_stake_account",
-          "writable": true
+          "name": "fromStakeAccount",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          "name": "split_stake_account",
-          "writable": true,
-          "signer": true
+          "name": "splitStakeAccount",
+          "isMut": true,
+          "isSigner": true
         },
         {
           "name": "validator",
-          "writable": true
+          "isMut": true,
+          "isSigner": false
         },
         {
-          "name": "rent_payer",
-          "writable": true,
-          "signer": true
+          "name": "rentPayer",
+          "isMut": true,
+          "isSigner": true
         },
         {
-          "name": "clock"
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "rent"
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "stake_history"
+          "name": "stakeHistory",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "stake_program"
+          "name": "stakeProgram",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "system_program"
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": []
     },
     {
-      "name": "era_update_active",
-      "discriminator": [
-        185,
-        133,
-        175,
-        129,
-        26,
-        151,
-        115,
-        218
-      ],
+      "name": "eraUpdateActive",
       "accounts": [
         {
-          "name": "stake_manager",
-          "writable": true
+          "name": "stakeManager",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          "name": "stake_account"
+          "name": "stakeAccount",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": []
     },
     {
-      "name": "era_update_rate",
-      "discriminator": [
-        223,
-        55,
-        230,
-        209,
-        252,
-        154,
-        227,
-        116
-      ],
+      "name": "eraUpdateRate",
       "accounts": [
         {
-          "name": "stake_manager",
-          "writable": true
+          "name": "stakeManager",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          "name": "stack"
+          "name": "stack",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "stake_pool"
+          "name": "stakePool",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "lsd_token_mint",
-          "writable": true
+          "name": "lsdTokenMint",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          "name": "platform_fee_recipient",
-          "writable": true
+          "name": "platformFeeRecipient",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          "name": "stack_fee_recipient",
-          "writable": true
+          "name": "stackFeeRecipient",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          "name": "stack_fee_account",
-          "writable": true
+          "name": "stackFeeAccount",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          "name": "associated_token_program"
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "token_program"
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": []
     },
     {
-      "name": "era_merge",
-      "discriminator": [
-        174,
-        80,
-        147,
-        234,
-        24,
-        233,
-        211,
-        195
-      ],
+      "name": "eraMerge",
       "accounts": [
         {
-          "name": "stake_manager",
-          "writable": true
+          "name": "stakeManager",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          "name": "src_stake_account",
-          "writable": true
+          "name": "srcStakeAccount",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          "name": "dst_stake_account",
-          "writable": true
+          "name": "dstStakeAccount",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          "name": "stake_pool"
+          "name": "stakePool",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "clock"
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "stake_history"
+          "name": "stakeHistory",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "stake_program"
+          "name": "stakeProgram",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": []
     },
     {
-      "name": "era_withdraw",
-      "discriminator": [
-        92,
-        3,
-        86,
-        172,
-        211,
-        111,
-        176,
-        238
-      ],
+      "name": "eraWithdraw",
       "accounts": [
         {
-          "name": "stake_manager",
-          "writable": true
+          "name": "stakeManager",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          "name": "stake_pool",
-          "writable": true
+          "name": "stakePool",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          "name": "stake_account",
-          "writable": true
+          "name": "stakeAccount",
+          "isMut": true,
+          "isSigner": false
         },
         {
-          "name": "clock"
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "stake_history"
+          "name": "stakeHistory",
+          "isMut": false,
+          "isSigner": false
         },
         {
-          "name": "stake_program"
+          "name": "stakeProgram",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": []
@@ -1038,212 +924,509 @@
   "accounts": [
     {
       "name": "Stack",
-      "discriminator": [
-        58,
-        70,
-        168,
-        244,
-        188,
-        169,
-        129,
-        79
-      ]
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "publicKey"
+          },
+          {
+            "name": "stackFeeCommission",
+            "type": "u64"
+          },
+          {
+            "name": "stakeManagersLenLimit",
+            "type": "u64"
+          },
+          {
+            "name": "entrustedStakeManagers",
+            "type": {
+              "vec": "publicKey"
+            }
+          }
+        ]
+      }
     },
     {
       "name": "StakeManager",
-      "discriminator": [
-        205,
-        143,
-        54,
-        235,
-        240,
-        28,
-        104,
-        211
-      ]
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "publicKey"
+          },
+          {
+            "name": "balancer",
+            "type": "publicKey"
+          },
+          {
+            "name": "stack",
+            "type": "publicKey"
+          },
+          {
+            "name": "lsdTokenMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "poolSeedBump",
+            "type": "u8"
+          },
+          {
+            "name": "rentExemptForPoolAcc",
+            "type": "u64"
+          },
+          {
+            "name": "minStakeAmount",
+            "type": "u64"
+          },
+          {
+            "name": "platformFeeCommission",
+            "type": "u64"
+          },
+          {
+            "name": "stackFeeCommission",
+            "type": "u64"
+          },
+          {
+            "name": "rateChangeLimit",
+            "type": "u64"
+          },
+          {
+            "name": "stakeAccountsLenLimit",
+            "type": "u64"
+          },
+          {
+            "name": "splitAccountsLenLimit",
+            "type": "u64"
+          },
+          {
+            "name": "unbondingDuration",
+            "type": "u64"
+          },
+          {
+            "name": "latestEra",
+            "type": "u64"
+          },
+          {
+            "name": "rate",
+            "type": "u64"
+          },
+          {
+            "name": "eraBond",
+            "type": "u64"
+          },
+          {
+            "name": "eraUnbond",
+            "type": "u64"
+          },
+          {
+            "name": "active",
+            "type": "u64"
+          },
+          {
+            "name": "totalPlatformFee",
+            "type": "u64"
+          },
+          {
+            "name": "validators",
+            "type": {
+              "vec": "publicKey"
+            }
+          },
+          {
+            "name": "stakeAccounts",
+            "type": {
+              "vec": "publicKey"
+            }
+          },
+          {
+            "name": "splitAccounts",
+            "type": {
+              "vec": "publicKey"
+            }
+          },
+          {
+            "name": "eraRates",
+            "type": {
+              "vec": {
+                "defined": "EraRate"
+              }
+            }
+          },
+          {
+            "name": "eraProcessData",
+            "type": {
+              "defined": "EraProcessData"
+            }
+          }
+        ]
+      }
     },
     {
       "name": "UnstakeAccount",
-      "discriminator": [
-        45,
-        203,
-        242,
-        225,
-        172,
-        87,
-        112,
-        71
-      ]
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "stakeManager",
+            "type": "publicKey"
+          },
+          {
+            "name": "recipient",
+            "type": "publicKey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "createdEpoch",
+            "type": "u64"
+          }
+        ]
+      }
     },
     {
       "name": "StackFeeAccount",
-      "discriminator": [
-        76,
-        201,
-        86,
-        252,
-        221,
-        169,
-        67,
-        99
-      ]
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "EraProcessData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "needBond",
+            "type": "u64"
+          },
+          {
+            "name": "needUnbond",
+            "type": "u64"
+          },
+          {
+            "name": "oldActive",
+            "type": "u64"
+          },
+          {
+            "name": "newActive",
+            "type": "u64"
+          },
+          {
+            "name": "pendingStakeAccounts",
+            "type": {
+              "vec": "publicKey"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "EraRate",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "era",
+            "type": "u64"
+          },
+          {
+            "name": "rate",
+            "type": "u64"
+          }
+        ]
+      }
     }
   ],
   "events": [
     {
       "name": "EventEraBond",
-      "discriminator": [
-        201,
-        184,
-        165,
-        183,
-        119,
-        31,
-        13,
-        45
+      "fields": [
+        {
+          "name": "era",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "stakeAccount",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "bondAmount",
+          "type": "u64",
+          "index": false
+        }
       ]
     },
     {
       "name": "EventEraMerge",
-      "discriminator": [
-        214,
-        23,
-        6,
-        241,
-        108,
-        236,
-        45,
-        255
+      "fields": [
+        {
+          "name": "srcStakeAccount",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "dstStakeAccount",
+          "type": "publicKey",
+          "index": false
+        }
       ]
     },
     {
       "name": "EventEraNew",
-      "discriminator": [
-        136,
-        194,
-        142,
-        92,
-        250,
-        156,
-        169,
-        205
+      "fields": [
+        {
+          "name": "newEra",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "needBond",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "needUnbond",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "active",
+          "type": "u64",
+          "index": false
+        }
       ]
     },
     {
       "name": "EventEraSkipBond",
-      "discriminator": [
-        151,
-        9,
-        57,
-        217,
-        134,
-        146,
-        239,
-        62
+      "fields": [
+        {
+          "name": "era",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "skipBondAmount",
+          "type": "u64",
+          "index": false
+        }
       ]
     },
     {
       "name": "EventEraUnbond",
-      "discriminator": [
-        143,
-        241,
-        61,
-        122,
-        199,
-        237,
-        39,
-        69
+      "fields": [
+        {
+          "name": "era",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "fromStakeAccount",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "splitAccount",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "unbondAmount",
+          "type": "u64",
+          "index": false
+        }
       ]
     },
     {
       "name": "EventEraUpdateActive",
-      "discriminator": [
-        48,
-        177,
-        221,
-        77,
-        44,
-        227,
-        41,
-        27
+      "fields": [
+        {
+          "name": "era",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "stakeAccount",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "stakeAmount",
+          "type": "u64",
+          "index": false
+        }
       ]
     },
     {
       "name": "EventEraUpdateRate",
-      "discriminator": [
-        85,
-        102,
-        224,
-        204,
-        12,
-        121,
-        241,
-        252
+      "fields": [
+        {
+          "name": "era",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "rate",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "platformFee",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "stackFee",
+          "type": "u64",
+          "index": false
+        }
       ]
     },
     {
       "name": "EventEraWithdraw",
-      "discriminator": [
-        185,
-        4,
-        129,
-        162,
-        74,
-        189,
-        5,
-        141
+      "fields": [
+        {
+          "name": "era",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "stakeAccount",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "withdrawAmount",
+          "type": "u64",
+          "index": false
+        }
       ]
     },
     {
       "name": "EventRedelegate",
-      "discriminator": [
-        213,
-        89,
-        235,
-        90,
-        33,
-        141,
-        34,
-        65
+      "fields": [
+        {
+          "name": "fromStakeAccount",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "toStakeAccount",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "redelegateAmount",
+          "type": "u64",
+          "index": false
+        }
       ]
     },
     {
       "name": "EventStake",
-      "discriminator": [
-        193,
-        220,
-        225,
-        33,
-        201,
-        27,
-        61,
-        43
+      "fields": [
+        {
+          "name": "era",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "staker",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "mintTo",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "stakeAmount",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "lsdTokenAmount",
+          "type": "u64",
+          "index": false
+        }
       ]
     },
     {
       "name": "EventUnstake",
-      "discriminator": [
-        7,
-        14,
-        248,
-        129,
-        43,
-        55,
-        41,
-        104
+      "fields": [
+        {
+          "name": "era",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "staker",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "burnLsdTokenFrom",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "unstakeAccount",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "unstakeAmount",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "solAmount",
+          "type": "u64",
+          "index": false
+        }
       ]
     },
     {
       "name": "EventWithdraw",
-      "discriminator": [
-        216,
-        247,
-        255,
-        93,
-        80,
-        238,
-        33,
-        136
+      "fields": [
+        {
+          "name": "era",
+          "type": "u64",
+          "index": false
+        },
+        {
+          "name": "staker",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "unstakeAccount",
+          "type": "publicKey",
+          "index": false
+        },
+        {
+          "name": "withdrawAmount",
+          "type": "u64",
+          "index": false
+        }
       ]
     }
   ],
@@ -1482,508 +1665,6 @@
       "code": 6046,
       "name": "StakeAccountsLenOverLimit",
       "msg": "Stake accounts len over limit"
-    }
-  ],
-  "types": [
-    {
-      "name": "EraProcessData",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "need_bond",
-            "type": "u64"
-          },
-          {
-            "name": "need_unbond",
-            "type": "u64"
-          },
-          {
-            "name": "old_active",
-            "type": "u64"
-          },
-          {
-            "name": "new_active",
-            "type": "u64"
-          },
-          {
-            "name": "pending_stake_accounts",
-            "type": {
-              "vec": "pubkey"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "EraRate",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "era",
-            "type": "u64"
-          },
-          {
-            "name": "rate",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "Stack",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "admin",
-            "type": "pubkey"
-          },
-          {
-            "name": "stack_fee_commission",
-            "type": "u64"
-          },
-          {
-            "name": "stake_managers_len_limit",
-            "type": "u64"
-          },
-          {
-            "name": "entrusted_stake_managers",
-            "type": {
-              "vec": "pubkey"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "StakeManager",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "admin",
-            "type": "pubkey"
-          },
-          {
-            "name": "balancer",
-            "type": "pubkey"
-          },
-          {
-            "name": "stack",
-            "type": "pubkey"
-          },
-          {
-            "name": "lsd_token_mint",
-            "type": "pubkey"
-          },
-          {
-            "name": "pool_seed_bump",
-            "type": "u8"
-          },
-          {
-            "name": "rent_exempt_for_pool_acc",
-            "type": "u64"
-          },
-          {
-            "name": "min_stake_amount",
-            "type": "u64"
-          },
-          {
-            "name": "platform_fee_commission",
-            "type": "u64"
-          },
-          {
-            "name": "stack_fee_commission",
-            "type": "u64"
-          },
-          {
-            "name": "rate_change_limit",
-            "type": "u64"
-          },
-          {
-            "name": "stake_accounts_len_limit",
-            "type": "u64"
-          },
-          {
-            "name": "split_accounts_len_limit",
-            "type": "u64"
-          },
-          {
-            "name": "unbonding_duration",
-            "type": "u64"
-          },
-          {
-            "name": "latest_era",
-            "type": "u64"
-          },
-          {
-            "name": "rate",
-            "type": "u64"
-          },
-          {
-            "name": "era_bond",
-            "type": "u64"
-          },
-          {
-            "name": "era_unbond",
-            "type": "u64"
-          },
-          {
-            "name": "active",
-            "type": "u64"
-          },
-          {
-            "name": "total_platform_fee",
-            "type": "u64"
-          },
-          {
-            "name": "validators",
-            "type": {
-              "vec": "pubkey"
-            }
-          },
-          {
-            "name": "stake_accounts",
-            "type": {
-              "vec": "pubkey"
-            }
-          },
-          {
-            "name": "split_accounts",
-            "type": {
-              "vec": "pubkey"
-            }
-          },
-          {
-            "name": "era_rates",
-            "type": {
-              "vec": {
-                "defined": {
-                  "name": "EraRate"
-                }
-              }
-            }
-          },
-          {
-            "name": "era_process_data",
-            "type": {
-              "defined": {
-                "name": "EraProcessData"
-              }
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "UnstakeAccount",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "stake_manager",
-            "type": "pubkey"
-          },
-          {
-            "name": "recipient",
-            "type": "pubkey"
-          },
-          {
-            "name": "amount",
-            "type": "u64"
-          },
-          {
-            "name": "created_epoch",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "StackFeeAccount",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "bump",
-            "type": "u8"
-          },
-          {
-            "name": "amount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "EventEraBond",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "era",
-            "type": "u64"
-          },
-          {
-            "name": "stake_account",
-            "type": "pubkey"
-          },
-          {
-            "name": "bond_amount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "EventEraMerge",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "src_stake_account",
-            "type": "pubkey"
-          },
-          {
-            "name": "dst_stake_account",
-            "type": "pubkey"
-          }
-        ]
-      }
-    },
-    {
-      "name": "EventEraNew",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "new_era",
-            "type": "u64"
-          },
-          {
-            "name": "need_bond",
-            "type": "u64"
-          },
-          {
-            "name": "need_unbond",
-            "type": "u64"
-          },
-          {
-            "name": "active",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "EventEraSkipBond",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "era",
-            "type": "u64"
-          },
-          {
-            "name": "skip_bond_amount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "EventEraUnbond",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "era",
-            "type": "u64"
-          },
-          {
-            "name": "from_stake_account",
-            "type": "pubkey"
-          },
-          {
-            "name": "split_account",
-            "type": "pubkey"
-          },
-          {
-            "name": "unbond_amount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "EventEraUpdateActive",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "era",
-            "type": "u64"
-          },
-          {
-            "name": "stake_account",
-            "type": "pubkey"
-          },
-          {
-            "name": "stake_amount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "EventEraUpdateRate",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "era",
-            "type": "u64"
-          },
-          {
-            "name": "rate",
-            "type": "u64"
-          },
-          {
-            "name": "platform_fee",
-            "type": "u64"
-          },
-          {
-            "name": "stack_fee",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "EventEraWithdraw",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "era",
-            "type": "u64"
-          },
-          {
-            "name": "stake_account",
-            "type": "pubkey"
-          },
-          {
-            "name": "withdraw_amount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "EventRedelegate",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "from_stake_account",
-            "type": "pubkey"
-          },
-          {
-            "name": "to_stake_account",
-            "type": "pubkey"
-          },
-          {
-            "name": "redelegate_amount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "EventStake",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "era",
-            "type": "u64"
-          },
-          {
-            "name": "staker",
-            "type": "pubkey"
-          },
-          {
-            "name": "mint_to",
-            "type": "pubkey"
-          },
-          {
-            "name": "stake_amount",
-            "type": "u64"
-          },
-          {
-            "name": "lsd_token_amount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "EventUnstake",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "era",
-            "type": "u64"
-          },
-          {
-            "name": "staker",
-            "type": "pubkey"
-          },
-          {
-            "name": "burn_lsd_token_from",
-            "type": "pubkey"
-          },
-          {
-            "name": "unstake_account",
-            "type": "pubkey"
-          },
-          {
-            "name": "unstake_amount",
-            "type": "u64"
-          },
-          {
-            "name": "sol_amount",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "EventWithdraw",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "era",
-            "type": "u64"
-          },
-          {
-            "name": "staker",
-            "type": "pubkey"
-          },
-          {
-            "name": "unstake_account",
-            "type": "pubkey"
-          },
-          {
-            "name": "withdraw_amount",
-            "type": "u64"
-          }
-        ]
-      }
     }
   ]
 }

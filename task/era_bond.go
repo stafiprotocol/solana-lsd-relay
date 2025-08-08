@@ -31,7 +31,7 @@ func (t *Task) EraBond(stakeManagerPubkey solana.PublicKey) error {
 		return err
 	}
 
-	eraBondInstruction, err := lsd_program.NewEraBondInstruction(
+	eraBondInstruction := lsd_program.NewEraBondInstruction(
 		stakeManagerPubkey,
 		stakeManager.Validators[0],
 		stakePool,
@@ -43,10 +43,7 @@ func (t *Task) EraBond(stakeManagerPubkey solana.PublicKey) error {
 		solana.SysVarStakeHistoryPubkey,
 		solana.StakeProgramID,
 		solana.SystemProgramID,
-	)
-	if err != nil {
-		return err
-	}
+	).Build()
 
 	latestBlockHashRes, err := t.client.GetLatestBlockhash(context.Background(), rpc.CommitmentConfirmed)
 	if err != nil {

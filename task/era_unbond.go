@@ -34,7 +34,7 @@ func (t *Task) EraUnbond(stakeManagerPubkey solana.PublicKey) error {
 		return fmt.Errorf("new random private key for split stake account error: %w", err)
 	}
 
-	eraUnbondInstruction, err := lsd_program.NewEraUnbondInstruction(
+	eraUnbondInstruction := lsd_program.NewEraUnbondInstruction(
 		stakeManagerPubkey,
 		stakePool,
 		stakeAccount,
@@ -46,10 +46,7 @@ func (t *Task) EraUnbond(stakeManagerPubkey solana.PublicKey) error {
 		solana.SysVarStakeHistoryPubkey,
 		solana.StakeProgramID,
 		solana.SystemProgramID,
-	)
-	if err != nil {
-		return fmt.Errorf("new era unbond instruction error: %w", err)
-	}
+	).Build()
 
 	latestBlockHashRes, err := t.client.GetLatestBlockhash(context.Background(), rpc.CommitmentConfirmed)
 	if err != nil {

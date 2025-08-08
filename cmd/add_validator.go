@@ -61,10 +61,7 @@ func stakeManagerAddValidator() *cobra.Command {
 				}
 			}
 
-			instruction, err := lsd_program.NewAddValidatorInstruction(stakeManagerPubkey, adminPubkey, addValidatorPubkey)
-			if err != nil {
-				return fmt.Errorf("NewAddValidatorInstruction failed, err: %s", err.Error())
-			}
+			instruction := lsd_program.NewAddValidatorInstruction(stakeManagerPubkey, adminPubkey, addValidatorPubkey).Build()
 			instructions := []solana.Instruction{instruction}
 
 			rpcClient := rpc.NewWithCustomRPCClient(rpc.NewWithLimiter(

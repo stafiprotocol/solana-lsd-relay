@@ -61,10 +61,7 @@ func stakeManagerRemoveValidator() *cobra.Command {
 				}
 			}
 
-			instruction, err := lsd_program.NewRemoveValidatorInstruction(removeValidatorPubkey, stakeManagerPubkey, adminPubkey)
-			if err != nil {
-				return fmt.Errorf("NewRemoveValidatorInstruction failed, err: %s", err.Error())
-			}
+			instruction := lsd_program.NewRemoveValidatorInstruction(removeValidatorPubkey, stakeManagerPubkey, adminPubkey).Build()
 			instructions := []solana.Instruction{instruction}
 
 			rpcClient := rpc.NewWithCustomRPCClient(rpc.NewWithLimiter(

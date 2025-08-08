@@ -136,13 +136,12 @@ func stakeManagerInitCmd() *cobra.Command {
 				feePayerPubkey,
 			).Build()
 
-			initInstruction, err := lsd_program.NewInitializeStakeManagerInstruction(
+			initInstruction := lsd_program.NewInitializeStakeManagerInstruction(
 				stakeManagerPubkey, stackPubkey, stakePool, stackFeeAccountPubkey,
 				lsdTokenMintPubkey, validatorPubkey, feePayerPubkey, adminPubkey,
-				solana.SPLAssociatedTokenAccountProgramID, system.ProgramID, solana.SysVarClockPubkey, solana.SysVarRentPubkey)
-			if err != nil {
-				return fmt.Errorf("NewInitializeStakeManagerInstruction failed, err: %s", err.Error())
-			}
+				solana.SPLAssociatedTokenAccountProgramID, system.ProgramID, solana.SysVarClockPubkey, solana.SysVarRentPubkey,
+			).Build()
+
 			instructions := []solana.Instruction{
 				transferInstruction,
 				createAccountInstruction,

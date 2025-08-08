@@ -60,14 +60,11 @@ func stakeManagerSetUnbondingDurationCmd() *cobra.Command {
 				}
 			}
 
-			setUnbondingDurationInstruction, err := lsd_program.NewSetUnbondingDurationInstruction(
+			setUnbondingDurationInstruction := lsd_program.NewSetUnbondingDurationInstruction(
 				cfg.UnbondingDuration,
 				stakeManagerPubkey,
 				adminPubkey,
-			)
-			if err != nil {
-				return fmt.Errorf("NewSetUnbondingDurationInstruction failed, err: %s", err.Error())
-			}
+			).Build()
 			instructions := []solana.Instruction{setUnbondingDurationInstruction}
 
 			rpcClient := rpc.NewWithCustomRPCClient(rpc.NewWithLimiter(

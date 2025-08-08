@@ -31,10 +31,7 @@ func (t *Task) EraUpdateActive(stakeManagerPubkey solana.PublicKey) error {
 			return fmt.Errorf("get stake account info error: %w", err)
 		}
 
-		eraUpdateActiveInstruction, err := lsd_program.NewEraUpdateActiveInstruction(stakeManagerPubkey, stakeAccountPubkey)
-		if err != nil {
-			return fmt.Errorf("new era update active instruction error: %w", err)
-		}
+		eraUpdateActiveInstruction := lsd_program.NewEraUpdateActiveInstruction(stakeManagerPubkey, stakeAccountPubkey).Build()
 
 		latestBlockHashRes, err := t.client.GetLatestBlockhash(context.Background(), rpc.CommitmentConfirmed)
 		if err != nil {

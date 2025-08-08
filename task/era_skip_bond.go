@@ -26,10 +26,7 @@ func (t *Task) EraSkipBond(stakeManagerPubkey solana.PublicKey) error {
 		return nil
 	}
 
-	eraSkipBondInstruction, err := lsd_program.NewEraSkipBondInstruction(stakeManagerPubkey, solana.StakeProgramID)
-	if err != nil {
-		return err
-	}
+	eraSkipBondInstruction := lsd_program.NewEraSkipBondInstruction(stakeManagerPubkey, solana.StakeProgramID).Build()
 
 	latestBlockHashRes, err := t.client.GetLatestBlockhash(context.Background(), rpc.CommitmentConfirmed)
 	if err != nil {

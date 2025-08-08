@@ -61,10 +61,7 @@ func addEntrustedStakeManager() *cobra.Command {
 				}
 			}
 
-			instruction, err := lsd_program.NewAddEntrustedStakeManagerInstruction(addEntrustedStakeManagerPubkey, stackPubkey, adminPubkey)
-			if err != nil {
-				return fmt.Errorf("NewAddEntrustedStakeManagerInstruction failed, err: %s", err.Error())
-			}
+			instruction := lsd_program.NewAddEntrustedStakeManagerInstruction(addEntrustedStakeManagerPubkey, stackPubkey, adminPubkey).Build()
 			instructions := []solana.Instruction{instruction}
 
 			rpcClient := rpc.NewWithCustomRPCClient(rpc.NewWithLimiter(
