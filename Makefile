@@ -32,10 +32,9 @@ fmt :
 	@echo " > \033[32mFormatting go files ...\033[0m "
 	go fmt ./...
 
-# install: GOTOOLCHAIN=go1.22.7 go install github.com/gagliardetto/anchor-go@v0.3.1
 anchor:
 	@echo "  >  \033[32mGenerating anchor bindings...\033[0m "
-	anchor-go -src ./pkg/lsd_program/lsd_program.json -dst ./pkg/lsd_program/
+	GOTOOLCHAIN=go1.22.7 go run  github.com/gagliardetto/anchor-go@v0.3.1 -src ./pkg/lsd_program/lsd_program.json -dst ./pkg/lsd_program/
 
 swagger:
 	@echo "  >  \033[32mBuilding swagger docs...\033[0m "
