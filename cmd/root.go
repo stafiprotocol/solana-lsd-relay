@@ -80,6 +80,10 @@ func stakeManagerCmd() *cobra.Command {
 		stakeManagerDetailCmd(),
 		stakeManagerSetRateLimitCmd(),
 		stakeManagerSetUnbondingDurationCmd(),
+		stakeManagerSetMinStakeAmountCmd(),
+		stakeManagerSetPlatformFeeCommissionCmd(),
+		stakeManagerTransferAdminCmd(),
+		stakeManagerTransferBalancerCmd(),
 		stakeManagerAddValidator(),
 		stakeManagerRemoveValidator(),
 	)

@@ -72,5 +72,5 @@ func (t *Task) EraBond(stakeManagerPubkey solana.PublicKey) error {
 		return nil
 	}
 
-	return fmt.Errorf("EraBond failed err: %w", err.Error())
+	return fmt.Errorf("EraBond failed err: %w", err)
 }
