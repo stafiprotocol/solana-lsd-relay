@@ -60,8 +60,23 @@ func stakeManagerDetailCmd() *cobra.Command {
 				return err
 			}
 
+			lsdTokenMintAccount, err := rpcClient.GetAccountInfo(context.Background(), stakeManager.LsdTokenMint)
+			if err != nil {
+				return err
+			}
+
+			var tokenProgramAccount string
+			if lsdTokenMintAccount.Value.Owner == solana.Token2022ProgramID {
+				tokenProgramAccount = solana.Token2022ProgramID.String() + " (Token2022)"
+			} else if lsdTokenMintAccount.Value.Owner == solana.TokenProgramID {
+				tokenProgramAccount = solana.TokenProgramID.String() + " (Token)"
+			} else {
+				return fmt.Errorf("lsd token mint account owner is not token2022 or token program")
+			}
+
 			fmt.Printf("stakePool: %s\n", stakePool)
 			fmt.Printf("stakeManager: \n%s\n", string(jsonBts))
+			fmt.Printf("LSD Token Program ID: %s\n", tokenProgramAccount)
 			return nil
 		},
 	}
