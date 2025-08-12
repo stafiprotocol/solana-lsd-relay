@@ -34,7 +34,7 @@ func addEntrustedStakeManager() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			lsd_program.ProgramID = solana.MustPublicKeyFromBase58(cfg.LsdProgramID)
+			lsd_program.SetProgramID(solana.MustPublicKeyFromBase58(cfg.LsdProgramID))
 
 			stackPubkey := solana.MustPublicKeyFromBase58(cfg.StackAddress)
 			adminPubkey := solana.MustPublicKeyFromBase58(cfg.AdminAccount)

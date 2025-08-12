@@ -74,7 +74,7 @@ func startCmd() *cobra.Command {
 			if !exist {
 				return fmt.Errorf("fee payer not exit in vault")
 			}
-			lsd_program.ProgramID = solana.MustPublicKeyFromBase58(cfg.LsdProgramID)
+			lsd_program.SetProgramID(solana.MustPublicKeyFromBase58(cfg.LsdProgramID))
 
 			t := task.NewTask(*cfg, feePayerAccount)
 			err = t.Start()

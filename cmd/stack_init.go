@@ -32,7 +32,7 @@ func stackInitCmd() *cobra.Command {
 				return err
 			}
 			lsdProgramID := solana.MustPublicKeyFromBase58(cfg.LsdProgramID)
-			lsd_program.ProgramID = lsdProgramID
+			lsd_program.SetProgramID(lsdProgramID)
 			feePayerAccountPubkey := solana.MustPublicKeyFromBase58(cfg.FeePayerAccount)
 			adminAccountPubkey := solana.MustPublicKeyFromBase58(cfg.AdminAccount)
 
