@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stafiprotocol/solana-lsd-relay/pkg/config"
 	"github.com/stafiprotocol/solana-lsd-relay/pkg/lsd_program"
+	"github.com/stafiprotocol/solana-lsd-relay/pkg/utils"
 	"golang.org/x/time/rate"
 )
 
@@ -73,17 +74,35 @@ func stackInitCmd() *cobra.Command {
 				5,                       // limit of requests per time frame
 			))
 
-			_, err = adminExecuteInstructions(
-				"initialize stack",
-				rpcClient,
-				[]solana.Instruction{initializeStackInstruction},
-				cfg.KeystorePath,
-				feePayerAccountPubkey,
-				adminAccountPubkey,
-				false)
+			latestBlockHashRes, err := rpcClient.GetLatestBlockhash(context.Background(), rpc.CommitmentConfirmed)
+			if err != nil {
+				return fmt.Errorf("get recent block hash error: %w", err)
+			}
+
+			tx, err := utils.NewSolanaTransaction(latestBlockHashRes.Value.Blockhash, []solana.Instruction{initializeStackInstruction}, feePayerAccountPubkey, true)
+			if err != nil {
+				return fmt.Errorf("NewTransaction failed, err: %s, tx: %s", err.Error(), tx.String())
+			}
+
+			privateKeyMap, err := utils.LoadPrivateKeysFromKeystore(cfg.KeystorePath)
 			if err != nil {
 				return err
 			}
+
+			feePayerAccount, exist := privateKeyMap[feePayerAccountPubkey.String()]
+			if !exist {
+				return fmt.Errorf("fee payer not exit in vault")
+			}
+
+			adminAccount, exist := privateKeyMap[adminAccountPubkey.String()]
+			if !exist {
+				return fmt.Errorf("admin not exit in vault")
+			}
+
+			if err = utils.SignAndSendTx(rpcClient, tx, utils.GetSignFunc(feePayerAccount, adminAccount, stackAccount), latestBlockHashRes.Value.LastValidBlockHeight); err != nil {
+				return fmt.Errorf("sign and send tx failed: %w", err)
+			}
+			fmt.Println("tx hash:", tx.Signatures[0].String())
 
 			retry := 0
 			for {
