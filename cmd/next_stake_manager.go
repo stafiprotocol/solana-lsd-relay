@@ -76,5 +76,8 @@ func nextStakeManagerCmd() *cobra.Command {
 	cmd.Flags().String(flagFeePayer, "", "fee payer")
 	cmd.Flags().String(flagEndPoint, "", "solana rpc endpoint")
 	cmd.Flags().String(flagLsdProgramID, "", "lsd program id")
+	cmd.MarkFlagRequired(flagFeePayer)
+	cmd.MarkFlagRequired(flagEndPoint)
+	cmd.MarkFlagRequired(flagLsdProgramID)
 	return cmd
 }

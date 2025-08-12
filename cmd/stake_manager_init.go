@@ -39,6 +39,7 @@ func stakeManagerInitCmd() *cobra.Command {
 				return err
 			}
 			lsdProgramID := solana.MustPublicKeyFromBase58(cfg.LsdProgramID)
+			lsd_program.SetProgramID(lsdProgramID)
 
 			stackPubkey := solana.MustPublicKeyFromBase58(cfg.StackAddress)
 			lsdTokenMintPubkey := solana.MustPublicKeyFromBase58(cfg.LsdTokenMintAddress)
