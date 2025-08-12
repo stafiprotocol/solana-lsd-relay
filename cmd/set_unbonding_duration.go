@@ -1,16 +1,15 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
+	"time"
 
+	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/spf13/cobra"
-	"github.com/stafiprotocol/solana-go-sdk/client"
-	"github.com/stafiprotocol/solana-go-sdk/common"
-	"github.com/stafiprotocol/solana-go-sdk/rsolprog"
-	"github.com/stafiprotocol/solana-go-sdk/types"
 	"github.com/stafiprotocol/solana-lsd-relay/pkg/config"
-	"github.com/stafiprotocol/solana-lsd-relay/pkg/vault"
+	"github.com/stafiprotocol/solana-lsd-relay/pkg/lsd_program"
+	"golang.org/x/time/rate"
 )
 
 func stakeManagerSetUnbondingDurationCmd() *cobra.Command {
@@ -20,6 +19,11 @@ func stakeManagerSetUnbondingDurationCmd() *cobra.Command {
 		Short: "Set unbonding duration",
 
 		RunE: func(cmd *cobra.Command, args []string) error {
+			exportTxMessage, err := cmd.Flags().GetBool(flagExportTx)
+			if err != nil {
+				return err
+			}
+
 			configPath, err := cmd.Flags().GetString(flagConfigPath)
 			if err != nil {
 				return err
@@ -30,51 +34,16 @@ func stakeManagerSetUnbondingDurationCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			v, err := vault.NewVaultFromWalletFile(cfg.KeystorePath)
-			if err != nil {
-				return err
-			}
-			boxer, err := vault.SecretBoxerForType(v.SecretBoxWrap)
-			if err != nil {
-				return fmt.Errorf("secret boxer: %w", err)
-			}
+			lsd_program.SetProgramID(solana.MustPublicKeyFromBase58(cfg.LsdProgramID))
 
-			if err := v.Open(boxer); err != nil {
-				return fmt.Errorf("opening: %w", err)
-			}
+			stakeManagerPubkey := solana.MustPublicKeyFromBase58(cfg.StakeManagerAddress)
+			adminPubkey := solana.MustPublicKeyFromBase58(cfg.AdminAccount)
+			feePayerPubkey := solana.MustPublicKeyFromBase58(cfg.FeePayerAccount)
 
-			privateKeyMap := make(map[string]vault.PrivateKey)
-			accountMap := make(map[string]types.Account)
-			for _, privKey := range v.KeyBag {
-				privateKeyMap[privKey.PublicKey().String()] = privKey
-				accountMap[privKey.PublicKey().String()] = types.AccountFromPrivateKeyBytes(privKey)
-			}
-
-			c := client.NewClient(cfg.EndpointList)
-
-			res, err := c.GetLatestBlockhash(context.Background(), client.GetLatestBlockhashConfig{
-				Commitment: client.CommitmentConfirmed,
-			})
-			if err != nil {
-				fmt.Printf("get recent block hash error, err: %v\n", err)
-			}
-
-			lsdProgramID := common.PublicKeyFromString(cfg.LsdProgramID)
-			stakeManagerPubkey := common.PublicKeyFromString(cfg.StakeManagerAddress)
-
-			feePayerAccount, exist := accountMap[cfg.FeePayerAccount]
-			if !exist {
-				return fmt.Errorf("fee payer not exit in vault")
-			}
-			adminAccount, exist := accountMap[cfg.AdminAccount]
-			if !exist {
-				return fmt.Errorf("admin not exit in vault")
-			}
-
-			fmt.Println("stakeManager:", stakeManagerPubkey.ToBase58())
-			fmt.Println("admin", adminAccount.PublicKey.ToBase58())
-			fmt.Println("feePayer:", feePayerAccount.PublicKey.ToBase58())
-			fmt.Println("UnbondingDuration:", cfg.UnbondingDuration)
+			fmt.Println("stakeManager:", stakeManagerPubkey)
+			fmt.Println("admin:", adminPubkey)
+			fmt.Println("feePayer:", feePayerPubkey)
+			fmt.Println("unbondingDuration(seconds):", cfg.UnbondingDuration)
 		Out:
 			for {
 				fmt.Println("\ncheck config info, then press (y/n) to continue:")
@@ -91,32 +60,24 @@ func stakeManagerSetUnbondingDurationCmd() *cobra.Command {
 				}
 			}
 
-			rawTx, err := types.CreateRawTransaction(types.CreateRawTransactionParam{
-				Instructions: []types.Instruction{
-					rsolprog.SetUnbondingDuration(
-						lsdProgramID,
-						stakeManagerPubkey,
-						adminAccount.PublicKey,
-						cfg.UnbondingDuration,
-					),
-				},
-				Signers:         []types.Account{feePayerAccount, adminAccount},
-				FeePayer:        feePayerAccount.PublicKey,
-				RecentBlockHash: res.Blockhash,
-			})
-			if err != nil {
-				fmt.Printf("generate tx error, err: %v\n", err)
-			}
-			txHash, err := c.SendRawTransaction(context.Background(), rawTx)
-			if err != nil {
-				fmt.Printf("send tx error, err: %v\n", err)
-			}
+			setUnbondingDurationInstruction := lsd_program.NewSetUnbondingDurationInstruction(
+				cfg.UnbondingDuration,
+				stakeManagerPubkey,
+				adminPubkey,
+			).Build()
+			instructions := []solana.Instruction{setUnbondingDurationInstruction}
 
-			fmt.Println("SetUnbondingDuration txHash:", txHash)
+			rpcClient := rpc.NewWithCustomRPCClient(rpc.NewWithLimiter(
+				cfg.EndpointList[0],
+				rate.Every(time.Second), // time frame
+				5,                       // limit of requests per time frame
+			))
 
-			return nil
+			_, err = adminExecuteInstructions("set unbonding duration", rpcClient, instructions, cfg.KeystorePath, feePayerPubkey, adminPubkey, exportTxMessage)
+			return err
 		},
 	}
 	cmd.Flags().String(flagConfigPath, defaultConfigPath, "Config file path")
+	cmd.Flags().Bool(flagExportTx, false, "Export tx message")
 	return cmd
 }

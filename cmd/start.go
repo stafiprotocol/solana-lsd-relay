@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/gagliardetto/solana-go"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/stafiprotocol/solana-go-sdk/types"
 	"github.com/stafiprotocol/solana-lsd-relay/pkg/config"
 	"github.com/stafiprotocol/solana-lsd-relay/pkg/log"
+	"github.com/stafiprotocol/solana-lsd-relay/pkg/lsd_program"
 	"github.com/stafiprotocol/solana-lsd-relay/pkg/utils"
-	"github.com/stafiprotocol/solana-lsd-relay/pkg/vault"
 	"github.com/stafiprotocol/solana-lsd-relay/task"
 )
 
@@ -66,27 +66,17 @@ func startCmd() *cobra.Command {
 
 			ctx := utils.ShutdownListener()
 
-			v, err := vault.NewVaultFromWalletFile(cfg.KeystorePath)
+			privateKeyMap, err := utils.LoadPrivateKeysFromKeystore(cfg.KeystorePath)
 			if err != nil {
 				return err
 			}
-			boxer, err := vault.SecretBoxerForType(v.SecretBoxWrap)
-			if err != nil {
-				return fmt.Errorf("secret boxer: %w", err)
+			feePayerAccount, exist := privateKeyMap[cfg.FeePayerAccount]
+			if !exist {
+				return fmt.Errorf("fee payer not exit in vault")
 			}
+			lsd_program.SetProgramID(solana.MustPublicKeyFromBase58(cfg.LsdProgramID))
 
-			if err := v.Open(boxer); err != nil {
-				return fmt.Errorf("opening: %w", err)
-			}
-
-			privateKeyMap := make(map[string]vault.PrivateKey)
-			accountMap := make(map[string]types.Account)
-			for _, privKey := range v.KeyBag {
-				privateKeyMap[privKey.PublicKey().String()] = privKey
-				accountMap[privKey.PublicKey().String()] = types.AccountFromPrivateKeyBytes(privKey)
-			}
-
-			t := task.NewTask(*cfg, accountMap)
+			t := task.NewTask(*cfg, feePayerAccount)
 			err = t.Start()
 			if err != nil {
 				return err

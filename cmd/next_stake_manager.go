@@ -3,10 +3,12 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"time"
 
+	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/spf13/cobra"
-	"github.com/stafiprotocol/solana-go-sdk/client"
-	"github.com/stafiprotocol/solana-go-sdk/common"
+	"golang.org/x/time/rate"
 )
 
 func nextStakeManagerCmd() *cobra.Command {
@@ -16,8 +18,7 @@ func nextStakeManagerCmd() *cobra.Command {
 		Short: "Get next stake manager info",
 
 		RunE: func(cmd *cobra.Command, args []string) error {
-
-			feePayer, err := cmd.Flags().GetString(flagFeePayer)
+			feePayerStr, err := cmd.Flags().GetString(flagFeePayer)
 			if err != nil {
 				return err
 			}
@@ -30,24 +31,28 @@ func nextStakeManagerCmd() *cobra.Command {
 				return err
 			}
 
-			c := client.NewClient([]string{endpoint})
+			rpcClient := rpc.NewWithCustomRPCClient(rpc.NewWithLimiter(
+				endpoint,
+				rate.Every(time.Second), // time frame
+				5,                       // limit of requests per time frame
+			))
 
-			feePayerPubkey := common.PublicKeyFromString(feePayer)
-			lsdProgramID := common.PublicKeyFromString(lsdProgramIDStr)
+			feePayerPubkey := solana.MustPublicKeyFromBase58(feePayerStr)
+			lsdProgramID := solana.MustPublicKeyFromBase58(lsdProgramIDStr)
 
-			var stakeManagerPubkey common.PublicKey
+			var stakeManagerPubkey solana.PublicKey
 			var seed string
 			index := 0
 			for i := 0; ; i++ {
 				index = i
 				seed = fmt.Sprintf(stakeManagerSeed, index)
-				stakeManagerPubkey = common.CreateWithSeed(feePayerPubkey, seed, lsdProgramID)
-				_, err := c.GetAccountInfo(context.Background(), stakeManagerPubkey.ToBase58(), client.GetAccountInfoConfig{
-					Encoding:  client.GetAccountInfoConfigEncodingBase64,
-					DataSlice: client.GetAccountInfoConfigDataSlice{},
-				})
+				stakeManagerPubkey, err = solana.CreateWithSeed(feePayerPubkey, seed, lsdProgramID)
 				if err != nil {
-					if err == client.ErrAccountNotFound {
+					return fmt.Errorf("CreateWithSeed failed, err: %w", err)
+				}
+				_, err = rpcClient.GetAccountInfo(context.Background(), stakeManagerPubkey)
+				if err != nil {
+					if err == rpc.ErrNotFound {
 						break
 					} else {
 						return err
@@ -55,14 +60,14 @@ func nextStakeManagerCmd() *cobra.Command {
 				}
 			}
 
-			stakePool, _, err := common.FindProgramAddress([][]byte{stakeManagerPubkey.Bytes(), stakePoolSeed}, lsdProgramID)
+			stakePool, _, err := solana.FindProgramAddress([][]byte{stakeManagerPubkey.Bytes(), stakePoolSeed}, lsdProgramID)
 			if err != nil {
 				return err
 			}
 
-			fmt.Println("lsdProgramID:", lsdProgramID.ToBase58())
-			fmt.Println("stakeManager:", stakeManagerPubkey.ToBase58())
-			fmt.Println("stakePool:", stakePool.ToBase58())
+			fmt.Println("lsdProgramID:", lsdProgramID)
+			fmt.Println("stakeManager:", stakeManagerPubkey)
+			fmt.Println("stakePool:", stakePool)
 			fmt.Println("index:", index)
 
 			return nil
@@ -71,5 +76,8 @@ func nextStakeManagerCmd() *cobra.Command {
 	cmd.Flags().String(flagFeePayer, "", "fee payer")
 	cmd.Flags().String(flagEndPoint, "", "solana rpc endpoint")
 	cmd.Flags().String(flagLsdProgramID, "", "lsd program id")
+	cmd.MarkFlagRequired(flagFeePayer)
+	cmd.MarkFlagRequired(flagEndPoint)
+	cmd.MarkFlagRequired(flagLsdProgramID)
 	return cmd
 }

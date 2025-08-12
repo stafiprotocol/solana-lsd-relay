@@ -16,7 +16,6 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/stafiprotocol/solana-lsd-relay/pkg/vault"
 )
 
 func vaultExportCmd() *cobra.Command {
@@ -25,7 +24,7 @@ func vaultExportCmd() *cobra.Command {
 		Use:   "export",
 		Short: "Export private keys (and corresponding public keys) inside a Solana vault.",
 		Run: func(cmd *cobra.Command, args []string) {
-			vault, _ := vault.MustGetWallet(cmd, false)
+			vault, _ := mustGetWallet(cmd, false)
 
 			vault.PrintPrivateKeys()
 		},

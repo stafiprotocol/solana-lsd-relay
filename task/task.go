@@ -1,84 +1,80 @@
 package task
 
 import (
-	"context"
 	"fmt"
 	"reflect"
 	"runtime"
 	"strings"
 	"time"
 
+	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/sirupsen/logrus"
-	"github.com/stafiprotocol/solana-go-sdk/client"
-	"github.com/stafiprotocol/solana-go-sdk/common"
-	"github.com/stafiprotocol/solana-go-sdk/lsdprog"
-	"github.com/stafiprotocol/solana-go-sdk/types"
 	"github.com/stafiprotocol/solana-lsd-relay/pkg/config"
+	"github.com/stafiprotocol/solana-lsd-relay/pkg/lsd_program"
 	"github.com/stafiprotocol/solana-lsd-relay/pkg/utils"
+	"golang.org/x/time/rate"
 )
 
 var stakePoolSeed = []byte("pool_seed")
 
 type Task struct {
-	stop        chan struct{}
-	cfg         config.ConfigStart
-	accountsMap map[string]types.Account
+	stop chan struct{}
+	cfg  config.ConfigStart
 
-	lsdProgramID       common.PublicKey
-	stackAccountPubkey common.PublicKey
-	stakeManagerPubkey common.PublicKey
+	lsdProgramID       solana.PublicKey
+	stackAccountPubkey solana.PublicKey
+	stakeManagerPubkey solana.PublicKey
 
-	feePayerAccount types.Account
+	feePayerAccount solana.PrivateKey
 	entrustedMode   bool
 
-	client   *client.Client
+	client   *rpc.Client
 	handlers []Handler
 }
 
 type Handler struct {
-	method func(common.PublicKey) error
+	method func(solana.PublicKey) error
 	name   string
 }
 
-func NewTask(cfg config.ConfigStart, accouts map[string]types.Account) *Task {
+func NewTask(cfg config.ConfigStart, feePayer solana.PrivateKey) *Task {
 	s := &Task{
-		stop:          make(chan struct{}),
-		cfg:           cfg,
-		accountsMap:   accouts,
-		entrustedMode: true,
+		stop:            make(chan struct{}),
+		cfg:             cfg,
+		feePayerAccount: feePayer,
+		entrustedMode:   true,
 	}
 	return s
 }
 
-func (task *Task) Start() error {
-	task.client = client.NewClient(task.cfg.EndpointList)
+func (t *Task) Start() error {
+	t.client = rpc.NewWithCustomRPCClient(rpc.NewWithLimiter(
+		t.cfg.EndpointList[0],
+		rate.Every(time.Second), // time frame
+		5,                       // limit of requests per time frame
+	))
 
-	lsdProgramID := common.PublicKeyFromString(task.cfg.LsdProgramID)
-	stackAccountPubkey := common.PublicKeyFromString(task.cfg.StackAddress)
+	lsdProgramID := solana.MustPublicKeyFromBase58(t.cfg.LsdProgramID)
+	stackAccountPubkey := solana.MustPublicKeyFromBase58(t.cfg.StackAddress)
 
-	feePayerAccount, exist := task.accountsMap[task.cfg.FeePayerAccount]
-	if !exist {
-		return fmt.Errorf("fee payer not exit in vault")
+	t.lsdProgramID = lsdProgramID
+	t.stackAccountPubkey = stackAccountPubkey
+	if len(t.cfg.StakeManagerAddress) > 0 {
+		t.stakeManagerPubkey = solana.MustPublicKeyFromBase58(t.cfg.StakeManagerAddress)
+		t.entrustedMode = false
 	}
 
-	task.lsdProgramID = lsdProgramID
-	task.stackAccountPubkey = stackAccountPubkey
-	task.feePayerAccount = feePayerAccount
-	if len(task.cfg.StakeManagerAddress) > 0 {
-		task.stakeManagerPubkey = common.PublicKeyFromString(task.cfg.StakeManagerAddress)
-		task.entrustedMode = false
-	}
-
-	task.appendHandlers(task.EraNew, task.EraSkipBond, task.EraBond, task.EraUnbond, task.EraUpdateActive, task.EraUpdateRate, task.EraMerge, task.EraWithdraw)
-	SafeGoWithRestart(task.handler)
+	t.appendHandlers(t.EraNew, t.EraSkipBond, t.EraBond, t.EraUnbond, t.EraUpdateActive, t.EraUpdateRate, t.EraMerge, t.EraWithdraw)
+	SafeGoWithRestart(t.handler)
 	return nil
 }
 
-func (task *Task) Stop() {
-	close(task.stop)
+func (t *Task) Stop() {
+	close(t.stop)
 }
 
-func (s *Task) appendHandlers(handlers ...func(common.PublicKey) error) {
+func (t *Task) appendHandlers(handlers ...func(solana.PublicKey) error) {
 	for _, handler := range handlers {
 
 		funcNameRaw := runtime.FuncForPC(reflect.ValueOf(handler).Pointer()).Name()
@@ -88,14 +84,14 @@ func (s *Task) appendHandlers(handlers ...func(common.PublicKey) error) {
 		funcName = strings.Split(funcName, ".")[2]
 		funcName = strings.Split(funcName, "-")[0]
 
-		s.handlers = append(s.handlers, Handler{
+		t.handlers = append(t.handlers, Handler{
 			method: handler,
 			name:   funcName,
 		})
 	}
 }
 
-func (s *Task) handler() {
+func (t *Task) handler() {
 	logrus.Info("start handlers")
 	retry := 0
 
@@ -105,11 +101,11 @@ func (s *Task) handler() {
 			return
 		}
 		select {
-		case <-s.stop:
+		case <-t.stop:
 			logrus.Info("task has stopped")
 			return
 		default:
-			err := s.handleEra()
+			err := t.handleEra()
 			if err != nil {
 				logrus.Warnf("era handle failed: %s, will retry.", err)
 				time.Sleep(time.Second * 6)
@@ -126,7 +122,8 @@ func (s *Task) handler() {
 
 func (t *Task) handleEra() error {
 	if t.entrustedMode {
-		stackAccount, err := t.client.GetLsdStack(context.Background(), t.stackAccountPubkey.ToBase58())
+		stackAccount := lsd_program.Stack{}
+		err := utils.GetAndDecodeAccountInfo(t.client, t.stackAccountPubkey, &stackAccount)
 		if err != nil {
 			return err
 		}
@@ -134,12 +131,12 @@ func (t *Task) handleEra() error {
 		for _, stakeManager := range stackAccount.EntrustedStakeManagers {
 			for _, handler := range t.handlers {
 				funcName := handler.name
-				logrus.Debugf("stakeManager: %s, handler %s start...", stakeManager.ToBase58(), funcName)
+				logrus.Debugf("stakeManager: %s, handler %s start...", stakeManager, funcName)
 				err := handler.method(stakeManager)
 				if err != nil {
 					return fmt.Errorf("handler %s failed: %s, will retry", funcName, err)
 				}
-				logrus.Debugf("stakeManager: %s, handler %s end", stakeManager.ToBase58(), funcName)
+				logrus.Debugf("stakeManager: %s, handler %s end", stakeManager, funcName)
 			}
 		}
 	} else {
@@ -156,54 +153,17 @@ func (t *Task) handleEra() error {
 	return nil
 }
 
-func isEmpty(data *lsdprog.EraProcessData) bool {
-	return data.NeedBond == 0 && data.NeedUnbond == 0 && data.NewActive == 0 && data.OldActive == 0 && len(data.PendingStakeAccounts) == 0
-}
-
-func needSkipBond(data *lsdprog.EraProcessData, minDelegationAmount uint64) bool {
-	return data.NeedBond > 0 && data.NeedBond < minDelegationAmount
-}
-
-func needBond(data *lsdprog.EraProcessData, minDelegationAmount uint64) bool {
-	return data.NeedBond >= minDelegationAmount
-}
-
-func needUnbond(data *lsdprog.EraProcessData) bool {
-	return data.NeedUnbond > 0
-}
-
-func needUpdateActive(data *lsdprog.EraProcessData) bool {
-	return data.NeedUnbond == 0 && data.NeedBond == 0 && len(data.PendingStakeAccounts) > 0
-}
-
-func needUpdateRate(data *lsdprog.EraProcessData) bool {
-	return data.NeedUnbond == 0 && data.NeedBond == 0 && len(data.PendingStakeAccounts) == 0 && data.NewActive != 0 && data.OldActive != 0
-}
-
-func (t *Task) waitTx(txHash string) error {
-	retry := 0
-	for {
-		if retry > 50 {
-			return fmt.Errorf("waitTx %s reach retry limit", txHash)
-		}
-
-		tx, err := t.client.GetTransactionV2(context.Background(), txHash)
-		if err != nil {
-			logrus.Debugf("query tx %s failed: %s", txHash, err.Error())
-			time.Sleep(time.Second * 6)
-			retry++
-			continue
-		}
-
-		if tx.Meta.Err != nil {
-			errString := ""
-			for _, log := range tx.Meta.LogMessages {
-				if strings.Contains(log, "Error") || strings.Contains(log, "error") {
-					errString += fmt.Sprintf(" log: %s", log)
-				}
-			}
-			return fmt.Errorf("meta err: %v, logs: %s", tx.Meta.Err, errString)
-		}
-		return nil
+func (t *Task) getStakeManagerAndPool(stakeManagerPubkey solana.PublicKey) (*lsd_program.StakeManager, solana.PublicKey, error) {
+	stakeManager := lsd_program.StakeManager{}
+	err := utils.GetAndDecodeAccountInfo(t.client, stakeManagerPubkey, &stakeManager)
+	if err != nil {
+		return nil, solana.PublicKey{}, err
 	}
+
+	stakePool, _, err := solana.FindProgramAddress([][]byte{stakeManagerPubkey.Bytes(), stakePoolSeed}, t.lsdProgramID)
+	if err != nil {
+		return nil, solana.PublicKey{}, err
+	}
+
+	return &stakeManager, stakePool, nil
 }

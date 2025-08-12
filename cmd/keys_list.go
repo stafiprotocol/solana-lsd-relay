@@ -16,7 +16,6 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/stafiprotocol/solana-lsd-relay/pkg/vault"
 )
 
 func vaultListCmd() *cobra.Command {
@@ -32,7 +31,7 @@ you cannot trust that these public keys have their counterpart in the
 wallet, unless you check with the "list" command.
 `,
 		Run: func(cmd *cobra.Command, args []string) {
-			vault, _ := vault.MustGetWallet(cmd, false)
+			vault, _ := mustGetWallet(cmd, false)
 
 			vault.PrintPublicKeys()
 		},

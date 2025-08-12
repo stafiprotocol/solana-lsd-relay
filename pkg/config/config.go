@@ -28,6 +28,10 @@ type ConfigInitStakeManager struct {
 	RemoveValidatorAddress string
 	RateChangeLimit        uint64
 	UnbondingDuration      uint64
+	MinStakeAmount         uint64
+	PlatformFeeCommission  uint64
+	NewBalancerAddress     string
+	NewAdminAddress        string
 }
 
 func LoadInitStakeManagerConfig(configFilePath string) (*ConfigInitStakeManager, error) {

@@ -4,19 +4,21 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/sirupsen/logrus"
-	"github.com/stafiprotocol/solana-go-sdk/client"
-	"github.com/stafiprotocol/solana-go-sdk/common"
-	"github.com/stafiprotocol/solana-go-sdk/lsdprog"
-	"github.com/stafiprotocol/solana-go-sdk/types"
+	"github.com/stafiprotocol/solana-lsd-relay/pkg/lsd_program"
+	"github.com/stafiprotocol/solana-lsd-relay/pkg/utils"
 )
 
-func (task *Task) EraNew(stakeManagerAddr common.PublicKey) error {
-	epochInfo, err := task.client.GetEpochInfo(context.Background(), client.CommitmentFinalized)
+func (t *Task) EraNew(stakeManagerPubkey solana.PublicKey) error {
+	stakeManager := lsd_program.StakeManager{}
+	err := utils.GetAndDecodeAccountInfo(t.client, stakeManagerPubkey, &stakeManager)
 	if err != nil {
 		return err
 	}
-	stakeManager, err := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
+
+	epochInfo, err := t.client.GetEpochInfo(context.Background(), rpc.CommitmentConfirmed)
 	if err != nil {
 		return err
 	}
@@ -24,50 +26,40 @@ func (task *Task) EraNew(stakeManagerAddr common.PublicKey) error {
 		return nil
 	}
 
-	if !isEmpty(&stakeManager.EraProcessData) {
+	if !stakeManager.EraProcessData.IsEmpty() {
 		return nil
 	}
 
-	res, err := task.client.GetLatestBlockhash(context.Background(), client.GetLatestBlockhashConfig{
-		Commitment: client.CommitmentConfirmed,
-	})
+	eraNewInstruction := lsd_program.NewEraNewInstruction(stakeManagerPubkey, solana.SysVarClockPubkey).Build()
+
+	latestBlockHashRes, err := t.client.GetLatestBlockhash(context.Background(), rpc.CommitmentConfirmed)
 	if err != nil {
-		fmt.Printf("get recent block hash error, err: %v\n", err)
+		return fmt.Errorf("get recent block hash error: %w", err)
 	}
 
-	rawTx, err := types.CreateRawTransaction(types.CreateRawTransactionParam{
-		Instructions: []types.Instruction{
-			lsdprog.EraNew(
-				task.lsdProgramID,
-				stakeManagerAddr,
-			),
-		},
-		Signers:         []types.Account{task.feePayerAccount},
-		FeePayer:        task.feePayerAccount.PublicKey,
-		RecentBlockHash: res.Blockhash,
-	})
+	tx, err := utils.NewSolanaTransaction(latestBlockHashRes.Value.Blockhash, []solana.Instruction{eraNewInstruction}, t.feePayerAccount.PublicKey(), true)
 	if err != nil {
-		fmt.Printf("generate tx error, err: %v\n", err)
-	}
-	txHash, err := task.client.SendRawTransaction(context.Background(), rawTx)
-	if err != nil {
-		fmt.Printf("send tx error, err: %v\n", err)
-	}
-
-	logrus.Infof("EraNew send tx hash: %s, newEra: %d", txHash, stakeManager.LatestEra+1)
-	if err := task.waitTx(txHash); err != nil {
-		stakeManagerNew, errInside := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
-		if errInside != nil {
-			return errInside
-		}
-		if stakeManagerNew.LatestEra > stakeManager.LatestEra {
-			logrus.Infof("EraNew success")
-			return nil
-		}
-
 		return err
 	}
-	logrus.Infof("EraNew success")
 
-	return nil
+	err = utils.SignAndSendTx(t.client, tx, utils.GetSignFunc(t.feePayerAccount), latestBlockHashRes.Value.LastValidBlockHeight)
+	txHash := tx.Signatures[0].String()
+	logrus.Infof("EraNew send tx hash: %s, newEra: %d", txHash, stakeManager.LatestEra+1)
+	if err == nil {
+		logrus.Infof("EraNew success")
+		return nil
+	}
+
+	// verify tx success
+	stakeManagerNew, _, getErr := t.getStakeManagerAndPool(stakeManagerPubkey)
+	if getErr != nil {
+		return getErr
+	}
+
+	if stakeManagerNew.LatestEra > stakeManager.LatestEra {
+		logrus.Infof("EraNew success")
+		return nil
+	}
+
+	return fmt.Errorf("EraNew failed err: %w", err)
 }

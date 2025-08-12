@@ -4,90 +4,78 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/sirupsen/logrus"
-	"github.com/stafiprotocol/solana-go-sdk/client"
-	"github.com/stafiprotocol/solana-go-sdk/common"
-	"github.com/stafiprotocol/solana-go-sdk/lsdprog"
-	"github.com/stafiprotocol/solana-go-sdk/types"
+	"github.com/stafiprotocol/solana-lsd-relay/pkg/lsd_program"
+	"github.com/stafiprotocol/solana-lsd-relay/pkg/utils"
 )
 
-func (task *Task) EraWithdraw(stakeManagerAddr common.PublicKey) error {
-	stakeManager, err := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
+func (t *Task) EraWithdraw(stakeManagerPubkey solana.PublicKey) error {
+	stakeManager, stakePool, err := t.getStakeManagerAndPool(stakeManagerPubkey)
 	if err != nil {
 		return err
 	}
 
-	couldWithdrawAccount := make([]common.PublicKey, 0)
+	withdrawableAccounts := make([]solana.PublicKey, 0)
 	for _, account := range stakeManager.SplitAccounts {
-		accountInfo, err := task.client.GetStakeActivation(
+		accountInfo, err := t.client.GetStakeActivation(
 			context.Background(),
-			account.ToBase58(),
-			client.GetStakeActivationConfig{})
+			account,
+			rpc.CommitmentConfirmed,
+			nil,
+		)
 		if err != nil {
 			return err
 		}
-		if accountInfo.State == client.StakeActivationStateInactive {
-			couldWithdrawAccount = append(couldWithdrawAccount, account)
+		if accountInfo.State == rpc.ActivationStateInactive {
+			withdrawableAccounts = append(withdrawableAccounts, account)
 		}
 	}
 
-	if len(couldWithdrawAccount) == 0 {
+	if len(withdrawableAccounts) == 0 {
 		return nil
 	}
-	stakePool, _, err := common.FindProgramAddress([][]byte{stakeManagerAddr.Bytes(), stakePoolSeed}, task.lsdProgramID)
-	if err != nil {
-		return err
+
+	for _, stakeAccount := range withdrawableAccounts {
+		stakeAccountInfo := lsd_program.StakeAccount{}
+		if err = utils.GetAndDecodeAccountInfo(t.client, stakeAccount, &stakeAccountInfo); err != nil {
+			return fmt.Errorf("get stake account info error: %w", err)
+		}
+
+		eraWithdrawInstruction := lsd_program.NewEraWithdrawInstruction(
+			stakeManagerPubkey,
+			stakePool,
+			stakeAccount,
+			solana.SysVarClockPubkey,
+			solana.SysVarStakeHistoryPubkey,
+			solana.StakeProgramID,
+		).Build()
+
+		latestBlockHashRes, err := t.client.GetLatestBlockhash(context.Background(), rpc.CommitmentConfirmed)
+		if err != nil {
+			return fmt.Errorf("get recent block hash error: %w", err)
+		}
+
+		tx, err := utils.NewSolanaTransaction(latestBlockHashRes.Value.Blockhash, []solana.Instruction{eraWithdrawInstruction}, t.feePayerAccount.PublicKey(), true)
+		if err != nil {
+			return fmt.Errorf("new solana transaction error: %w", err)
+		}
+		logrus.Infof("EraWithdraw send tx hash: %s, stakeAccount: %s", tx.Signatures[0], stakeAccount)
+		err = utils.SignAndSendTx(t.client, tx, utils.GetSignFunc(t.feePayerAccount), latestBlockHashRes.Value.LastValidBlockHeight)
+		if err == nil {
+			logrus.Info("EraWithdraw success")
+			return nil
+		}
+
+		stakeAccountInfoNew := lsd_program.StakeAccount{}
+		if verifyErr := utils.GetAndDecodeAccountInfo(t.client, stakeAccount, &stakeAccountInfoNew); verifyErr != nil && verifyErr == rpc.ErrNotFound {
+			logrus.Info("EraWithdraw success")
+			return nil
+		}
+
+		return fmt.Errorf("EraWithdraw failed err: %w", err)
 	}
 
-	for _, stakeAccount := range couldWithdrawAccount {
-		stakeAccountInfo, err := task.client.GetStakeAccountInfo(context.Background(), stakeAccount.ToBase58())
-		if err != nil {
-			return err
-		}
-
-		res, err := task.client.GetLatestBlockhash(context.Background(), client.GetLatestBlockhashConfig{
-			Commitment: client.CommitmentConfirmed,
-		})
-		if err != nil {
-			fmt.Printf("get recent block hash error, err: %v\n", err)
-		}
-
-		rawTx, err := types.CreateRawTransaction(types.CreateRawTransactionParam{
-			Instructions: []types.Instruction{
-				lsdprog.EraWithdraw(
-					task.lsdProgramID,
-					stakeManagerAddr,
-					stakePool,
-					stakeAccount,
-				),
-			},
-			Signers:         []types.Account{task.feePayerAccount},
-			FeePayer:        task.feePayerAccount.PublicKey,
-			RecentBlockHash: res.Blockhash,
-		})
-
-		if err != nil {
-			fmt.Printf("generate tx error, err: %v\n", err)
-		}
-		txHash, err := task.client.SendRawTransaction(context.Background(), rawTx)
-		if err != nil {
-			fmt.Printf("send tx error, err: %v\n", err)
-		}
-
-		logrus.Infof("EraWithdraw send tx hash: %s, stakeAccount: %s, withdrawAmount: %d",
-			txHash, stakeAccount.ToBase58(), stakeAccountInfo.Lamports)
-
-		if err := task.waitTx(txHash); err != nil {
-			_, errInside := task.client.GetStakeAccountInfo(context.Background(), stakeAccount.ToBase58())
-			if errInside != nil && errInside == client.ErrAccountNotFound {
-				logrus.Info("EraWithdraw success")
-				return nil
-			}
-
-			return err
-		}
-
-		logrus.Info("EraWithdraw success")
-	}
 	return nil
 }

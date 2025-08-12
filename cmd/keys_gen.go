@@ -17,8 +17,9 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/gagliardetto/solana-go"
 	"github.com/spf13/cobra"
-	"github.com/stafiprotocol/solana-lsd-relay/pkg/vault"
+	"github.com/stafiprotocol/solana-lsd-relay/pkg/utils"
 )
 
 func vaultGenCmd() *cobra.Command {
@@ -40,27 +41,27 @@ func vaultGenCmd() *cobra.Command {
 				return err
 			}
 
-			v, boxer := vault.MustGetWallet(cmd, true)
+			v, boxer := mustGetWallet(cmd, true)
 			if len(v.KeyBag) > 0 {
 				v.PrintPublicKeys()
 			}
 
-			privateKeys := make([]vault.PrivateKey, 0)
+			privateKeys := make([]solana.PrivateKey, 0)
 			for i := 0; i < numKeys; i++ {
-				_, privKey, err := vault.NewRandomPrivateKey()
+				privKey, err := solana.NewRandomPrivateKey()
 				if err != nil {
 					return err
 				}
 				privateKeys = append(privateKeys, privKey)
 			}
 
-			var newKeys []vault.PublicKey
+			var newKeys []solana.PublicKey
 			for _, privateKey := range privateKeys {
 				v.AddPrivateKey(privateKey)
 				newKeys = append(newKeys, privateKey.PublicKey())
 			}
 
-			if err = v.Seal(vault.CreateBoxerIfNeeded(boxer)); err != nil {
+			if err = v.Seal(utils.CreateBoxerIfNeeded(boxer)); err != nil {
 				fmt.Printf("seal err: %s", err)
 				return err
 			}
@@ -71,7 +72,7 @@ func vaultGenCmd() *cobra.Command {
 				return err
 			}
 
-			vault.WrittenReport(walletFile, newKeys, len(v.KeyBag))
+			vaultWrittenReport(walletFile, newKeys, len(v.KeyBag))
 			return nil
 		},
 	}

@@ -4,80 +4,73 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/sirupsen/logrus"
-	"github.com/stafiprotocol/solana-go-sdk/client"
-	"github.com/stafiprotocol/solana-go-sdk/common"
-	"github.com/stafiprotocol/solana-go-sdk/lsdprog"
-	"github.com/stafiprotocol/solana-go-sdk/types"
+	"github.com/stafiprotocol/solana-lsd-relay/pkg/lsd_program"
+	"github.com/stafiprotocol/solana-lsd-relay/pkg/utils"
 )
 
-func (task *Task) EraBond(stakeManagerAddr common.PublicKey) error {
-	stakeManager, err := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
+func (t *Task) EraBond(stakeManagerPubkey solana.PublicKey) error {
+	stakeManager, stakePool, err := t.getStakeManagerAndPool(stakeManagerPubkey)
 	if err != nil {
 		return err
 	}
 
-	minDelegationAmount, err := task.client.GetMinDelegationAmount(context.Background())
+	minDelegationAmount, err := utils.GetMinDelegationAmount(t.client)
 	if err != nil {
 		return err
 	}
 
-	if !needBond(&stakeManager.EraProcessData, minDelegationAmount) {
+	if !stakeManager.EraProcessData.IsNeedBond(minDelegationAmount) {
 		return nil
 	}
 
-	stakePool, _, err := common.FindProgramAddress([][]byte{stakeManagerAddr.Bytes(), stakePoolSeed}, task.lsdProgramID)
+	stakeAccount, err := solana.NewRandomPrivateKey()
 	if err != nil {
 		return err
 	}
 
-	res, err := task.client.GetLatestBlockhash(context.Background(), client.GetLatestBlockhashConfig{
-		Commitment: client.CommitmentConfirmed,
-	})
+	eraBondInstruction := lsd_program.NewEraBondInstruction(
+		stakeManagerPubkey,
+		stakeManager.Validators[0],
+		stakePool,
+		stakeAccount.PublicKey(),
+		t.feePayerAccount.PublicKey(),
+		solana.SysVarClockPubkey,
+		solana.SysVarRentPubkey,
+		solana.SysVarStakeConfigPubkey,
+		solana.SysVarStakeHistoryPubkey,
+		solana.StakeProgramID,
+		solana.SystemProgramID,
+	).Build()
+
+	latestBlockHashRes, err := t.client.GetLatestBlockhash(context.Background(), rpc.CommitmentConfirmed)
 	if err != nil {
-		fmt.Printf("get recent block hash error, err: %v\n", err)
+		return fmt.Errorf("get recent block hash error: %w", err)
 	}
 
-	stakeAccount := types.NewAccount() //random account
-
-	rawTx, err := types.CreateRawTransaction(types.CreateRawTransactionParam{
-		Instructions: []types.Instruction{
-			lsdprog.EraBond(
-				task.lsdProgramID,
-				stakeManagerAddr,
-				stakeManager.Validators[0], // use first validator
-				stakePool,
-				stakeAccount.PublicKey,
-				task.feePayerAccount.PublicKey,
-			),
-		},
-		Signers:         []types.Account{task.feePayerAccount, stakeAccount},
-		FeePayer:        task.feePayerAccount.PublicKey,
-		RecentBlockHash: res.Blockhash,
-	})
-
+	tx, err := utils.NewSolanaTransaction(latestBlockHashRes.Value.Blockhash, []solana.Instruction{eraBondInstruction}, t.feePayerAccount.PublicKey(), false)
 	if err != nil {
-		fmt.Printf("generate tx error, err: %v\n", err)
+		return fmt.Errorf("NewTransaction failed, err: %s, tx: %s", err.Error(), tx.String())
 	}
-	txHash, err := task.client.SendRawTransaction(context.Background(), rawTx)
-	if err != nil {
-		fmt.Printf("send tx error, err: %v\n", err)
+	signFunc := utils.GetSignFunc(t.feePayerAccount, stakeAccount)
+	if err = utils.SignAndSendTx(t.client, tx, signFunc, latestBlockHashRes.Value.LastValidBlockHeight); err != nil {
+		return fmt.Errorf("SignAndSendTx failed, err: %s", err.Error())
 	}
 
 	logrus.Infof("EraBond send tx hash: %s, stakeAccount: %s, bond: %d",
-		txHash, stakeAccount.PublicKey.ToBase58(), stakeManager.EraProcessData.NeedBond)
-	if err := task.waitTx(txHash); err != nil {
-		stakeManagerNew, errInside := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
-		if errInside != nil {
-			return errInside
-		}
-		if !needBond(&stakeManagerNew.EraProcessData, minDelegationAmount) {
-			logrus.Info("EraBond success")
-			return nil
-		}
-		return err
-	}
-	logrus.Info("EraBond success")
+		tx.Signatures[0], stakeAccount.PublicKey(), stakeManager.EraProcessData.NeedBond)
 
-	return nil
+	// verify tx success
+	stakeManagerNew, _, getErr := t.getStakeManagerAndPool(stakeManagerPubkey)
+	if getErr != nil {
+		return getErr
+	}
+	if !stakeManagerNew.EraProcessData.IsNeedBond(minDelegationAmount) {
+		logrus.Info("EraBond success")
+		return nil
+	}
+
+	return fmt.Errorf("EraBond failed err: %w", err)
 }

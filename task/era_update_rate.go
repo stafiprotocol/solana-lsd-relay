@@ -4,126 +4,130 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gagliardetto/solana-go"
+	associatedtokenaccount "github.com/gagliardetto/solana-go/programs/associated-token-account"
+	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/sirupsen/logrus"
-	"github.com/stafiprotocol/solana-go-sdk/assotokenprog"
-	"github.com/stafiprotocol/solana-go-sdk/client"
-	"github.com/stafiprotocol/solana-go-sdk/common"
-	"github.com/stafiprotocol/solana-go-sdk/lsdprog"
-	"github.com/stafiprotocol/solana-go-sdk/types"
+	"github.com/stafiprotocol/solana-lsd-relay/pkg/lsd_program"
+	"github.com/stafiprotocol/solana-lsd-relay/pkg/utils"
 )
 
-func (task *Task) EraUpdateRate(stakeManagerAddr common.PublicKey) error {
-	stakeManager, err := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
+func (t *Task) EraUpdateRate(stakeManagerPubkey solana.PublicKey) error {
+	stakeManager, stakePool, err := t.getStakeManagerAndPool(stakeManagerPubkey)
 	if err != nil {
 		return err
 	}
 
-	if !needUpdateRate(&stakeManager.EraProcessData) {
+	if !stakeManager.EraProcessData.IsNeedUpdateRate() {
 		return nil
 	}
-	stackAccount, err := task.client.GetLsdStack(context.Background(), task.stackAccountPubkey.ToBase58())
+
+	stackAccount := lsd_program.Stack{}
+	if err = utils.GetAndDecodeAccountInfo(t.client, t.stackAccountPubkey, &stackAccount); err != nil {
+		return fmt.Errorf("get stack account info error: %w", err)
+	}
+
+	instructions := make([]solana.Instruction, 0)
+
+	platformFeeRecipient, _, err := solana.FindAssociatedTokenAddress(stakeManager.Admin, stakeManager.LsdTokenMint)
 	if err != nil {
 		return err
 	}
 
-	stakePool, _, err := common.FindProgramAddress([][]byte{stakeManagerAddr.Bytes(), stakePoolSeed}, task.lsdProgramID)
-	if err != nil {
-		return err
-	}
-
-	instructions := make([]types.Instruction, 0)
-
-	platformFeeRecipient, _, err := common.FindAssociatedTokenAddress(stakeManager.Admin, stakeManager.LsdTokenMint)
-	if err != nil {
-		return err
-	}
-
-	_, err = task.client.GetTokenAccountInfo(context.Background(), platformFeeRecipient.ToBase58())
-	if err != nil {
-		if err == client.ErrAccountNotFound {
-			instructions = append(instructions, assotokenprog.CreateAssociatedTokenAccount(
-				task.feePayerAccount.PublicKey, stakeManager.Admin, stakeManager.LsdTokenMint))
+	if _, err = t.client.GetAccountInfo(context.Background(), platformFeeRecipient); err != nil {
+		if err == rpc.ErrNotFound {
+			// create platform fee recipient account if not exist
+			associatedTokenAccountInstruction := associatedtokenaccount.NewCreateInstruction(
+				t.feePayerAccount.PublicKey(),
+				stakeManager.Admin,
+				stakeManager.LsdTokenMint,
+			).Build()
+			instructions = append(instructions, associatedTokenAccountInstruction)
 		} else {
 			return err
 		}
 	}
 
-	stackFeeRecipient, _, err := common.FindAssociatedTokenAddress(stackAccount.Admin, stakeManager.LsdTokenMint)
+	stackFeeRecipient, _, err := solana.FindAssociatedTokenAddress(stackAccount.Admin, stakeManager.LsdTokenMint)
 	if err != nil {
 		return err
 	}
 
 	if platformFeeRecipient != stackFeeRecipient {
-		_, err = task.client.GetTokenAccountInfo(context.Background(), stackFeeRecipient.ToBase58())
-		if err != nil {
-			if err == client.ErrAccountNotFound {
-				instructions = append(instructions, assotokenprog.CreateAssociatedTokenAccount(
-					task.feePayerAccount.PublicKey, stackAccount.Admin, stakeManager.LsdTokenMint))
+		if _, err = t.client.GetAccountInfo(context.Background(), stackFeeRecipient); err != nil {
+			if err == rpc.ErrNotFound {
+				// create stack fee recipient account if not exist
+				associatedTokenAccountInstruction := associatedtokenaccount.NewCreateInstruction(
+					t.feePayerAccount.PublicKey(),
+					stackAccount.Admin,
+					stakeManager.LsdTokenMint,
+				).Build()
+				instructions = append(instructions, associatedTokenAccountInstruction)
 			} else {
 				return err
 			}
 		}
 	}
 
-	stackFeeAccount, _, err := common.FindProgramAddress([][]byte{task.stackAccountPubkey.Bytes(), stakeManager.LsdTokenMint.Bytes()}, task.lsdProgramID)
+	stackFeeAccount, _, err := solana.FindProgramAddress([][]byte{t.stackAccountPubkey.Bytes(), stakeManager.LsdTokenMint.Bytes()}, t.lsdProgramID)
 	if err != nil {
 		return err
 	}
 
-	res, err := task.client.GetLatestBlockhash(context.Background(), client.GetLatestBlockhashConfig{
-		Commitment: client.CommitmentConfirmed,
-	})
+	lsdTokenMintAccount, err := t.client.GetAccountInfo(context.Background(), stakeManager.LsdTokenMint)
 	if err != nil {
-		fmt.Printf("get recent block hash error, err: %v\n", err)
+		return err
 	}
 
-	lsdTokenMint := stakeManager.LsdTokenMint
+	var tokenProgramAccount solana.PublicKey
+	if lsdTokenMintAccount.Value.Owner == solana.Token2022ProgramID {
+		tokenProgramAccount = solana.Token2022ProgramID
+	} else if lsdTokenMintAccount.Value.Owner == solana.TokenProgramID {
+		tokenProgramAccount = solana.TokenProgramID
+	} else {
+		return fmt.Errorf("lsd token mint account owner is not token2022 or token program")
+	}
 
-	instructions = append(instructions, lsdprog.EraUpdateRate(
-		task.lsdProgramID,
-		stakeManagerAddr,
-		task.stackAccountPubkey,
+	eraUpdateRateInstruction := lsd_program.NewEraUpdateRateInstruction(
+		stakeManagerPubkey,
+		t.stackAccountPubkey,
 		stakePool,
-		lsdTokenMint,
+		stakeManager.LsdTokenMint,
 		platformFeeRecipient,
 		stackFeeRecipient,
 		stackFeeAccount,
-	))
+		associatedtokenaccount.ProgramID,
+		tokenProgramAccount,
+	).Build()
 
-	rawTx, err := types.CreateRawTransaction(types.CreateRawTransactionParam{
-		Instructions:    instructions,
-		Signers:         []types.Account{task.feePayerAccount},
-		FeePayer:        task.feePayerAccount.PublicKey,
-		RecentBlockHash: res.Blockhash,
-	})
+	instructions = append(instructions, eraUpdateRateInstruction)
 
+	latestBlockHashRes, err := t.client.GetLatestBlockhash(context.Background(), rpc.CommitmentConfirmed)
 	if err != nil {
-		fmt.Printf("generate tx error, err: %v\n", err)
+		return fmt.Errorf("get recent block hash error: %w", err)
 	}
-	txHash, err := task.client.SendRawTransaction(context.Background(), rawTx)
+
+	tx, err := utils.NewSolanaTransaction(latestBlockHashRes.Value.Blockhash, instructions, t.feePayerAccount.PublicKey(), true)
 	if err != nil {
-		fmt.Printf("send tx error, err: %v\n", err)
+		return fmt.Errorf("new solana transaction error: %w", err)
 	}
 
 	logrus.Infof("EraUpdateRate send tx hash: %s, pipelineActive: %d, eraSnapshotActive: %d, eraProcessActive: %d, rate(old): %d",
-		txHash, stakeManager.Active, stakeManager.EraProcessData.OldActive, stakeManager.EraProcessData.NewActive, stakeManager.Rate)
-	if err := task.waitTx(txHash); err != nil {
-		stakeManagerNew, errInside := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
-		if errInside != nil {
-			return errInside
-		}
-
-		if !needUpdateRate(&stakeManagerNew.EraProcessData) {
-			logrus.Infof("EraUpdateRate success, rate(new): %d", stakeManagerNew.Rate)
-			return nil
-		}
-		return err
-	}
-	stakeManagerNew, err := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
-	if err != nil {
-		return err
+		tx.Signatures[0], stakeManager.Active, stakeManager.EraProcessData.OldActive, stakeManager.EraProcessData.NewActive, stakeManager.Rate)
+	err = utils.SignAndSendTx(t.client, tx, utils.GetSignFunc(t.feePayerAccount), latestBlockHashRes.Value.LastValidBlockHeight)
+	if err == nil {
+		logrus.Info("EraUpdateActive success")
+		return nil
 	}
 
-	logrus.Infof("EraUpdateRate success, rate(new): %d", stakeManagerNew.Rate)
-	return nil
+	stakeManagerNew, _, verifyErr := t.getStakeManagerAndPool(stakeManagerPubkey)
+	if verifyErr != nil {
+		return verifyErr
+	}
+	if !stakeManagerNew.EraProcessData.IsNeedUpdateRate() {
+		logrus.Infof("EraUpdateRate success, rate(new): %d", stakeManagerNew.Rate)
+		return nil
+	}
+
+	return fmt.Errorf("EraUpdateRate failed err: %w", err)
 }

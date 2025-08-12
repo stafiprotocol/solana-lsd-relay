@@ -4,83 +4,75 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/sirupsen/logrus"
-	"github.com/stafiprotocol/solana-go-sdk/client"
-	"github.com/stafiprotocol/solana-go-sdk/common"
-	"github.com/stafiprotocol/solana-go-sdk/lsdprog"
-	"github.com/stafiprotocol/solana-go-sdk/types"
+	"github.com/stafiprotocol/solana-lsd-relay/pkg/lsd_program"
+	"github.com/stafiprotocol/solana-lsd-relay/pkg/utils"
 )
 
-func (task *Task) EraUnbond(stakeManagerAddr common.PublicKey) error {
-	stakeManager, err := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
+func (t *Task) EraUnbond(stakeManagerPubkey solana.PublicKey) error {
+	stakeManager, stakePool, err := t.getStakeManagerAndPool(stakeManagerPubkey)
 	if err != nil {
 		return err
 	}
 
-	if !needUnbond(&stakeManager.EraProcessData) {
+	if !stakeManager.EraProcessData.IsNeedUnbond() {
 		return nil
 	}
 
-	stakePool, _, err := common.FindProgramAddress([][]byte{stakeManagerAddr.Bytes(), stakePoolSeed}, task.lsdProgramID)
-	if err != nil {
-		return err
-	}
-
 	stakeAccount := stakeManager.StakeAccounts[0] // use first
-	stakeAccountInfo, err := task.client.GetStakeAccountInfo(context.Background(), stakeAccount.ToBase58())
+
+	stakeAccountInfo := lsd_program.StakeAccount{}
+	if err = utils.GetAndDecodeAccountInfo(t.client, stakeAccount, &stakeAccountInfo); err != nil {
+		return fmt.Errorf("get stake account info error: %w", err)
+	}
+
+	validator := stakeAccountInfo.Info.Stake.Delegation.Voter
+	splitStakeAccount, err := solana.NewRandomPrivateKey()
+	if err != nil {
+		return fmt.Errorf("new random private key for split stake account error: %w", err)
+	}
+
+	eraUnbondInstruction := lsd_program.NewEraUnbondInstruction(
+		stakeManagerPubkey,
+		stakePool,
+		stakeAccount,
+		splitStakeAccount.PublicKey(),
+		validator,
+		t.feePayerAccount.PublicKey(),
+		solana.SysVarClockPubkey,
+		solana.SysVarRentPubkey,
+		solana.SysVarStakeHistoryPubkey,
+		solana.StakeProgramID,
+		solana.SystemProgramID,
+	).Build()
+
+	latestBlockHashRes, err := t.client.GetLatestBlockhash(context.Background(), rpc.CommitmentConfirmed)
+	if err != nil {
+		return fmt.Errorf("get recent block hash error: %w", err)
+	}
+
+	tx, err := utils.NewSolanaTransaction(latestBlockHashRes.Value.Blockhash, []solana.Instruction{eraUnbondInstruction}, t.feePayerAccount.PublicKey(), false)
 	if err != nil {
 		return err
 	}
-	validator := stakeAccountInfo.StakeAccount.Info.Stake.Delegation.Voter
 
-	res, err := task.client.GetLatestBlockhash(context.Background(), client.GetLatestBlockhashConfig{
-		Commitment: client.CommitmentConfirmed,
-	})
-	if err != nil {
-		fmt.Printf("get recent block hash error, err: %v\n", err)
-	}
-	splitStakeAccount := types.NewAccount() //random account
-
-	rawTx, err := types.CreateRawTransaction(types.CreateRawTransactionParam{
-		Instructions: []types.Instruction{
-			lsdprog.EraUnbond(
-				task.lsdProgramID,
-				stakeManagerAddr,
-				stakePool,
-				stakeAccount,
-				splitStakeAccount.PublicKey,
-				validator,
-				task.feePayerAccount.PublicKey,
-			),
-		},
-		Signers:         []types.Account{task.feePayerAccount, splitStakeAccount},
-		FeePayer:        task.feePayerAccount.PublicKey,
-		RecentBlockHash: res.Blockhash,
-	})
-
-	if err != nil {
-		fmt.Printf("generate tx error, err: %v\n", err)
-	}
-	txHash, err := task.client.SendRawTransaction(context.Background(), rawTx)
-	if err != nil {
-		fmt.Printf("send tx error, err: %v\n", err)
+	err = utils.SignAndSendTx(t.client, tx, utils.GetSignFunc(t.feePayerAccount, splitStakeAccount), latestBlockHashRes.Value.LastValidBlockHeight)
+	txHash := tx.Signatures[0].String()
+	logrus.Infof("EraUnbond send tx hash: %s, unbondAmount: %d", txHash, stakeManager.EraProcessData.NeedUnbond)
+	if err == nil {
+		logrus.Infof("EraUnbond success")
+		return nil
 	}
 
-	logrus.Infof("EraUnbond send tx hash: %s, splitStakeAccount: %s, unbond: %d",
-		txHash, splitStakeAccount.PublicKey.ToBase58(), stakeManager.EraProcessData.NeedBond)
-	if err := task.waitTx(txHash); err != nil {
-		stakeManagerNew, errInside := task.client.GetLsdStakeManager(context.Background(), stakeManagerAddr.ToBase58())
-		if errInside != nil {
-			return errInside
-		}
-		if stakeManagerNew.EraProcessData.NeedUnbond < stakeManager.EraProcessData.NeedUnbond {
-			logrus.Info("EraUnbond success")
-			return nil
-		}
-
-		return err
+	stakeManagerNew, _, getErr := t.getStakeManagerAndPool(stakeManagerPubkey)
+	if getErr != nil {
+		return getErr
+	} else if !stakeManagerNew.EraProcessData.IsNeedUnbond() {
+		logrus.Info("EraUnbond success")
+		return nil
 	}
 
-	logrus.Info("EraUnbond success")
-	return nil
+	return fmt.Errorf("EraUnbond failed err: %w", err)
 }

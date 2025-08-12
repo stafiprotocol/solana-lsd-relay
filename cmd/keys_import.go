@@ -16,9 +16,14 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
+	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/cli"
+	"github.com/gagliardetto/solana-go/vault"
 	"github.com/spf13/cobra"
-	"github.com/stafiprotocol/solana-lsd-relay/pkg/vault"
+	"github.com/stafiprotocol/solana-lsd-relay/pkg/utils"
 )
 
 func vaultImportCmd() *cobra.Command {
@@ -31,7 +36,7 @@ func vaultImportCmd() *cobra.Command {
 				return err
 			}
 
-			v, boxer := vault.MustGetWallet(cmd, true)
+			v, boxer := mustGetWallet(cmd, true)
 			if len(v.KeyBag) > 0 {
 				v.PrintPublicKeys()
 			}
@@ -46,13 +51,13 @@ func vaultImportCmd() *cobra.Command {
 				return nil
 			}
 
-			var newKeys []vault.PublicKey
+			var newKeys []solana.PublicKey
 			for _, privateKey := range privateKeys {
 				v.AddPrivateKey(privateKey)
 				newKeys = append(newKeys, privateKey.PublicKey())
 			}
 
-			if err = v.Seal(vault.CreateBoxerIfNeeded(boxer)); err != nil {
+			if err = v.Seal(utils.CreateBoxerIfNeeded(boxer)); err != nil {
 				fmt.Printf("failed to seal vault: %s", err)
 				return err
 			}
@@ -63,7 +68,7 @@ func vaultImportCmd() *cobra.Command {
 				return err
 			}
 
-			vault.WrittenReport(walletFile, newKeys, len(v.KeyBag))
+			vaultWrittenReport(walletFile, newKeys, len(v.KeyBag))
 			return nil
 		},
 	}
@@ -72,7 +77,41 @@ func vaultImportCmd() *cobra.Command {
 	return cmd
 }
 
-func capturePrivateKeys() (out []vault.PrivateKey, err error) {
+func mustGetWallet(cmd *cobra.Command, create bool) (*vault.Vault, vault.SecretBoxer) {
+	if create {
+		walletFile, err := cmd.Flags().GetString(flagKeystorePath)
+		exitOnError("wallet create", err)
+
+		if _, err := os.Stat(walletFile); err != nil {
+			// create directory if not exist
+			dir := filepath.Dir(walletFile)
+			err = os.MkdirAll(dir, 0750)
+			exitOnError(fmt.Sprintf("create directory %s error", dir), err)
+
+			return vault.NewVault(), nil
+		}
+	}
+
+	walletFile, err := cmd.Flags().GetString(flagKeystorePath)
+	if err != nil {
+		exitOnError("get keystore path", err)
+	}
+	_, err = os.Stat(walletFile)
+	exitOnError(fmt.Sprintf("wallet file %q missing", walletFile), err)
+
+	vault, boxer, err := utils.OpenVault(walletFile)
+	exitOnError("wallet open", err)
+	return vault, boxer
+}
+
+func exitOnError(msg string, err error) {
+	if err != nil {
+		fmt.Printf("ERROR: %s: %s\n", msg, err.Error())
+		os.Exit(1)
+	}
+}
+
+func capturePrivateKeys() (out []solana.PrivateKey, err error) {
 	fmt.Println("")
 	fmt.Println("PLEASE READ:")
 	fmt.Println("We are now going to ask you to paste your private keys, one at a time.")
@@ -95,13 +134,13 @@ func capturePrivateKeys() (out []vault.PrivateKey, err error) {
 	}
 }
 
-func capturePrivateKey(isFirst bool) (privateKey vault.PrivateKey, err error) {
+func capturePrivateKey(isFirst bool) (privateKey solana.PrivateKey, err error) {
 	prompt := "Paste your first private key: "
 	if !isFirst {
 		prompt = "Paste your next private key or hit ENTER if you are done: "
 	}
 
-	enteredKey, err := vault.GetPassword(prompt)
+	enteredKey, err := cli.GetPassword(prompt)
 	if err != nil {
 		return nil, fmt.Errorf("get private key: %s", err)
 	}
@@ -110,7 +149,7 @@ func capturePrivateKey(isFirst bool) (privateKey vault.PrivateKey, err error) {
 		return nil, nil
 	}
 
-	key, err := vault.PrivateKeyFromBase58(enteredKey)
+	key, err := solana.PrivateKeyFromBase58(enteredKey)
 	if err != nil {
 		return nil, fmt.Errorf("import private key: %s", err)
 	}
@@ -118,4 +157,15 @@ func capturePrivateKey(isFirst bool) (privateKey vault.PrivateKey, err error) {
 	fmt.Printf("- Scanned private key corresponding to %s\n", key.PublicKey().String())
 
 	return key, nil
+}
+
+func vaultWrittenReport(walletFile string, newKeys []solana.PublicKey, totalKeys int) {
+	fmt.Println("")
+	fmt.Printf("Wallet file %q written to disk.\n", walletFile)
+	fmt.Println("Here are the keys that were ADDED during this operation (use `list` to see them all):")
+	for _, pub := range newKeys {
+		fmt.Printf("- %s\n", pub.String())
+	}
+
+	fmt.Printf("Total keys stored: %d\n", totalKeys)
 }
