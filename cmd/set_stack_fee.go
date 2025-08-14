@@ -65,7 +65,7 @@ func setStackFee() *cobra.Command {
 			instructions := []solana.Instruction{instruction}
 
 			rpcClient := rpc.NewWithCustomRPCClient(rpc.NewWithLimiter(
-				cfg.EndpointList[0],
+				cfg.Endpoint,
 				rate.Every(time.Second), // time frame
 				5,                       // limit of requests per time frame
 			))

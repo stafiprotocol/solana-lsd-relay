@@ -19,18 +19,13 @@ func stakeManagerRemoveValidator() *cobra.Command {
 		Short: "Remove validator",
 
 		RunE: func(cmd *cobra.Command, args []string) error {
-			exportTxMessage, err := cmd.Flags().GetBool(flagExportTx)
-			if err != nil {
-				return err
-			}
-
 			configPath, err := cmd.Flags().GetString(flagConfigPath)
 			if err != nil {
 				return err
 			}
 			fmt.Printf("config path: %s\n", configPath)
 
-			cfg, err := config.LoadInitStakeManagerConfig(configPath)
+			cfg, err := config.LoadSetStakeManagerConfig(configPath)
 			if err != nil {
 				return err
 			}
@@ -45,6 +40,7 @@ func stakeManagerRemoveValidator() *cobra.Command {
 			fmt.Println("admin:", adminPubkey)
 			fmt.Println("feePayer:", feePayerPubkey)
 			fmt.Println("removeValidatorAddress:", removeValidatorPubkey)
+			fmt.Println("exportTx:", cfg.ExportTx)
 		Out:
 			for {
 				fmt.Println("\ncheck config info, then press (y/n) to continue:")
@@ -65,19 +61,18 @@ func stakeManagerRemoveValidator() *cobra.Command {
 			instructions := []solana.Instruction{instruction}
 
 			rpcClient := rpc.NewWithCustomRPCClient(rpc.NewWithLimiter(
-				cfg.EndpointList[0],
+				cfg.Endpoint,
 				rate.Every(time.Second), // time frame
 				5,                       // limit of requests per time frame
 			))
 
-			_, err = adminExecuteInstructions("remove validator", rpcClient, instructions, cfg.KeystorePath, feePayerPubkey, adminPubkey, exportTxMessage)
+			_, err = adminExecuteInstructions("remove validator", rpcClient, instructions, cfg.KeystorePath, feePayerPubkey, adminPubkey, cfg.ExportTx)
 			if err != nil {
 				return err
 			}
 			return nil
 		},
 	}
-	cmd.Flags().String(flagConfigPath, defaultConfigPath, "Config file path")
-	cmd.Flags().Bool(flagExportTx, false, "Export tx message")
+	cmd.Flags().String(flagConfigPath, "config_set_stakemanager.toml", "Config file path, example: config_set_stakemanager.example.toml")
 	return cmd
 }

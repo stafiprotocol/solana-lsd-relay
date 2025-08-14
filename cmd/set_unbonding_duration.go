@@ -19,18 +19,13 @@ func stakeManagerSetUnbondingDurationCmd() *cobra.Command {
 		Short: "Set unbonding duration",
 
 		RunE: func(cmd *cobra.Command, args []string) error {
-			exportTxMessage, err := cmd.Flags().GetBool(flagExportTx)
-			if err != nil {
-				return err
-			}
-
 			configPath, err := cmd.Flags().GetString(flagConfigPath)
 			if err != nil {
 				return err
 			}
 			fmt.Printf("config path: %s\n", configPath)
 
-			cfg, err := config.LoadInitStakeManagerConfig(configPath)
+			cfg, err := config.LoadSetStakeManagerConfig(configPath)
 			if err != nil {
 				return err
 			}
@@ -44,6 +39,7 @@ func stakeManagerSetUnbondingDurationCmd() *cobra.Command {
 			fmt.Println("admin:", adminPubkey)
 			fmt.Println("feePayer:", feePayerPubkey)
 			fmt.Println("unbondingDuration(seconds):", cfg.UnbondingDuration)
+			fmt.Println("exportTx:", cfg.ExportTx)
 		Out:
 			for {
 				fmt.Println("\ncheck config info, then press (y/n) to continue:")
@@ -68,16 +64,15 @@ func stakeManagerSetUnbondingDurationCmd() *cobra.Command {
 			instructions := []solana.Instruction{setUnbondingDurationInstruction}
 
 			rpcClient := rpc.NewWithCustomRPCClient(rpc.NewWithLimiter(
-				cfg.EndpointList[0],
+				cfg.Endpoint,
 				rate.Every(time.Second), // time frame
 				5,                       // limit of requests per time frame
 			))
 
-			_, err = adminExecuteInstructions("set unbonding duration", rpcClient, instructions, cfg.KeystorePath, feePayerPubkey, adminPubkey, exportTxMessage)
+			_, err = adminExecuteInstructions("set unbonding duration", rpcClient, instructions, cfg.KeystorePath, feePayerPubkey, adminPubkey, cfg.ExportTx)
 			return err
 		},
 	}
-	cmd.Flags().String(flagConfigPath, defaultConfigPath, "Config file path")
-	cmd.Flags().Bool(flagExportTx, false, "Export tx message")
+	cmd.Flags().String(flagConfigPath, "config_set_stakemanager.toml", "Config file path, example: config_set_stakemanager.example.toml")
 	return cmd
 }

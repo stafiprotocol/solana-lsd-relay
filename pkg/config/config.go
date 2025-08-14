@@ -11,7 +11,7 @@ import (
 )
 
 type ConfigInitStakeManager struct {
-	EndpointList []string // url for  rpc endpoint
+	Endpoint     string // url for  rpc endpoint
 	KeystorePath string
 
 	LsdProgramID        string
@@ -22,41 +22,18 @@ type ConfigInitStakeManager struct {
 
 	FeePayerAccount string
 	AdminAccount    string
-
-	// setting
-	AddValidatorAddress    string
-	RemoveValidatorAddress string
-	RateChangeLimit        uint64
-	UnbondingDuration      uint64
-	MinStakeAmount         uint64
-	PlatformFeeCommission  uint64
-	NewBalancerAddress     string
-	NewAdminAddress        string
 }
 
 func LoadInitStakeManagerConfig(configFilePath string) (*ConfigInitStakeManager, error) {
 	var cfg = ConfigInitStakeManager{}
-	if err := loadSysConfigInitStakeManager(configFilePath, &cfg); err != nil {
+	if err := loadConfigFromFile(configFilePath, &cfg); err != nil {
 		return nil, err
 	}
-
 	return &cfg, nil
 }
 
-func loadSysConfigInitStakeManager(path string, config *ConfigInitStakeManager) error {
-	_, err := os.Open(path)
-	if err != nil {
-		return err
-	}
-	if _, err := toml.DecodeFile(path, config); err != nil {
-		return err
-	}
-	fmt.Println("load config success")
-	return nil
-}
-
 type ConfigInitStack struct {
-	EndpointList []string // url for  rpc endpoint
+	Endpoint     string // url for  rpc endpoint
 	KeystorePath string
 
 	LsdProgramID string
@@ -74,27 +51,14 @@ type ConfigInitStack struct {
 
 func LoadInitStackConfig(configFilePath string) (*ConfigInitStack, error) {
 	var cfg = ConfigInitStack{}
-	if err := loadSysConfigInitStack(configFilePath, &cfg); err != nil {
+	if err := loadConfigFromFile(configFilePath, &cfg); err != nil {
 		return nil, err
 	}
-
 	return &cfg, nil
 }
 
-func loadSysConfigInitStack(path string, config *ConfigInitStack) error {
-	_, err := os.Open(path)
-	if err != nil {
-		return err
-	}
-	if _, err := toml.DecodeFile(path, config); err != nil {
-		return err
-	}
-	fmt.Println("load config success")
-	return nil
-}
-
 type ConfigStart struct {
-	EndpointList []string // url for  rpc endpoint
+	Endpoint     string // url for  rpc endpoint
 	LogFilePath  string
 	KeystorePath string
 
@@ -108,7 +72,7 @@ type ConfigStart struct {
 
 func LoadStartConfig(configFilePath string) (*ConfigStart, error) {
 	var cfg = ConfigStart{}
-	if err := loadSysConfigStart(configFilePath, &cfg); err != nil {
+	if err := loadConfigFromFile(configFilePath, &cfg); err != nil {
 		return nil, err
 	}
 	if len(cfg.LogFilePath) == 0 {
@@ -118,7 +82,37 @@ func LoadStartConfig(configFilePath string) (*ConfigStart, error) {
 	return &cfg, nil
 }
 
-func loadSysConfigStart(path string, config *ConfigStart) error {
+type ConfigSetStakeManager struct {
+	Endpoint     string // url for  rpc endpoint
+	KeystorePath string
+	ExportTx     bool
+
+	LsdProgramID        string
+	StakeManagerAddress string
+	FeePayerAccount     string
+	AdminAccount        string
+
+	// setting
+	AddValidatorAddress    string
+	RemoveValidatorAddress string
+	RateChangeLimit        uint64
+	UnbondingDuration      uint64
+	MinStakeAmount         uint64
+	PlatformFeeCommission  uint64
+	NewBalancerAddress     string
+	NewAdminAddress        string
+}
+
+func LoadSetStakeManagerConfig(configFilePath string) (*ConfigSetStakeManager, error) {
+	var cfg = ConfigSetStakeManager{}
+	if err := loadConfigFromFile(configFilePath, &cfg); err != nil {
+		return nil, err
+	}
+
+	return &cfg, nil
+}
+
+func loadConfigFromFile(path string, config any) error {
 	_, err := os.Open(path)
 	if err != nil {
 		return err

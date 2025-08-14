@@ -1,5 +1,5 @@
 
-EndpointList = ["https://api.devnet.solana.com"]
+Endpoint = "https://api.devnet.solana.com"
 KeystorePath = "./keys/solana_keys.json"
 
 LsdProgramID = "795MBfkwwtAX4fWiFqZcJK8D91P9tqqtiSRrSNhBvGzq"

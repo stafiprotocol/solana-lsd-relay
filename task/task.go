@@ -50,7 +50,7 @@ func NewTask(cfg config.ConfigStart, feePayer solana.PrivateKey) *Task {
 
 func (t *Task) Start() error {
 	t.client = rpc.NewWithCustomRPCClient(rpc.NewWithLimiter(
-		t.cfg.EndpointList[0],
+		t.cfg.Endpoint,
 		rate.Every(time.Second), // time frame
 		5,                       // limit of requests per time frame
 	))

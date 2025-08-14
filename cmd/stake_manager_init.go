@@ -48,7 +48,7 @@ func stakeManagerInitCmd() *cobra.Command {
 			adminPubkey := solana.MustPublicKeyFromBase58(cfg.AdminAccount)
 
 			rpcClient := rpc.NewWithCustomRPCClient(rpc.NewWithLimiter(
-				cfg.EndpointList[0],
+				cfg.Endpoint,
 				rate.Every(time.Second), // time frame
 				5,                       // limit of requests per time frame
 			))
