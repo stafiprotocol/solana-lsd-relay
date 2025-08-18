@@ -16,6 +16,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/stafiprotocol/solana-lsd-relay/cmd/common"
 )
 
 func vaultListCmd() *cobra.Command {
@@ -36,6 +37,6 @@ wallet, unless you check with the "list" command.
 			vault.PrintPublicKeys()
 		},
 	}
-	cmd.Flags().StringP(flagKeystorePath, "", defaultKeystorePath, "Wallet file that contains encrypted key material")
+	cmd.Flags().StringP(common.FlagKeystorePath, "", common.DefaultKeystorePath, "Wallet file that contains encrypted key material")
 	return cmd
 }

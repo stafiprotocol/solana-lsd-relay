@@ -5,7 +5,6 @@ package config
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/BurntSushi/toml"
 )
@@ -14,72 +13,42 @@ type ConfigInitStakeManager struct {
 	Endpoint     string // url for  rpc endpoint
 	KeystorePath string
 
-	LsdProgramID        string
-	StackAddress        string
-	LsdTokenMintAddress string
-	ValidatorAddress    string
-	StakeManagerAddress string
+	StakeManagerProgramID string
+	StackAddress          string
+	ValidatorAddress      string
 
 	FeePayerAccount string
 	AdminAccount    string
-}
-
-func LoadInitStakeManagerConfig(configFilePath string) (*ConfigInitStakeManager, error) {
-	var cfg = ConfigInitStakeManager{}
-	if err := loadConfigFromFile(configFilePath, &cfg); err != nil {
-		return nil, err
-	}
-	return &cfg, nil
 }
 
 type ConfigInitStack struct {
 	Endpoint     string // url for  rpc endpoint
 	KeystorePath string
 
-	LsdProgramID string
+	StackProgramID string
 
 	FeePayerAccount string
 	AdminAccount    string
-
-	// setting
-	StackAddress                    string
-	AddEntrustedStakeManagerAddress string
-
-	StakeManagerAddress string
-	StackFeeCommission  uint64
 }
 
-func LoadInitStackConfig(configFilePath string) (*ConfigInitStack, error) {
-	var cfg = ConfigInitStack{}
-	if err := loadConfigFromFile(configFilePath, &cfg); err != nil {
-		return nil, err
-	}
-	return &cfg, nil
-}
-
-type ConfigStart struct {
+type ConfigStartStakeManager struct {
 	Endpoint     string // url for  rpc endpoint
 	LogFilePath  string
 	KeystorePath string
 
-	LsdProgramID string
-
-	StackAddress        string
 	StakeManagerAddress string
 
 	FeePayerAccount string
 }
 
-func LoadStartConfig(configFilePath string) (*ConfigStart, error) {
-	var cfg = ConfigStart{}
-	if err := loadConfigFromFile(configFilePath, &cfg); err != nil {
-		return nil, err
-	}
-	if len(cfg.LogFilePath) == 0 {
-		cfg.LogFilePath = "./log_data"
-	}
+type ConfigStartStack struct {
+	Endpoint     string // url for  rpc endpoint
+	LogFilePath  string
+	KeystorePath string
 
-	return &cfg, nil
+	StackAddress string
+
+	FeePayerAccount string
 }
 
 type ConfigSetStakeManager struct {
@@ -87,7 +56,6 @@ type ConfigSetStakeManager struct {
 	KeystorePath string
 	ExportTx     bool
 
-	LsdProgramID        string
 	StakeManagerAddress string
 	FeePayerAccount     string
 	AdminAccount        string
@@ -95,31 +63,37 @@ type ConfigSetStakeManager struct {
 	// setting
 	AddValidatorAddress    string
 	RemoveValidatorAddress string
-	RateChangeLimit        uint64
-	UnbondingDuration      uint64
-	MinStakeAmount         uint64
-	PlatformFeeCommission  uint64
+	RateChangeLimit        int64
+	UnbondingDuration      int64
+	MinStakeAmount         int64
+	PlatformFeeCommission  int64
 	NewBalancerAddress     string
-	NewAdminAddress        string
+
+	NewAdminAddress string
 }
 
-func LoadSetStakeManagerConfig(configFilePath string) (*ConfigSetStakeManager, error) {
-	var cfg = ConfigSetStakeManager{}
-	if err := loadConfigFromFile(configFilePath, &cfg); err != nil {
+type ConfigSetStack struct {
+	Endpoint     string // url for  rpc endpoint
+	KeystorePath string
+	ExportTx     bool
+
+	FeePayerAccount string
+	AdminAccount    string
+	StackAddress    string
+
+	AddEntrustedStakeManagerAddress    string
+	RemoveEntrustedStakeManagerAddress string
+	StakeManagerAddress                string
+	StackFeeCommission                 uint64
+	NewAdminAddress                    string
+}
+
+func LoadConfig[conf any](path string) (*conf, error) {
+	ret := new(conf)
+	if _, err := toml.DecodeFile(path, ret); err != nil {
 		return nil, err
 	}
-
-	return &cfg, nil
-}
-
-func loadConfigFromFile(path string, config any) error {
-	_, err := os.Open(path)
-	if err != nil {
-		return err
-	}
-	if _, err := toml.DecodeFile(path, config); err != nil {
-		return err
-	}
 	fmt.Println("load config success")
-	return nil
+
+	return ret, nil
 }

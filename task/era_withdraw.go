@@ -7,15 +7,16 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/sirupsen/logrus"
-	"github.com/stafiprotocol/solana-lsd-relay/pkg/lsd_program"
+	"github.com/stafiprotocol/solana-lsd-relay/pkg/stake_manager"
 	"github.com/stafiprotocol/solana-lsd-relay/pkg/utils"
 )
 
 func (t *Task) EraWithdraw(stakeManagerPubkey solana.PublicKey) error {
-	stakeManager, stakePool, err := t.getStakeManagerAndPool(stakeManagerPubkey)
+	stakeManager, stakeManagerProgramID, stakePool, err := utils.GetStakeManagerInfo(t.client, stakeManagerPubkey)
 	if err != nil {
 		return err
 	}
+	stake_manager.SetProgramID(stakeManagerProgramID)
 
 	withdrawableAccounts := make([]solana.PublicKey, 0)
 	for _, account := range stakeManager.SplitAccounts {
@@ -38,12 +39,12 @@ func (t *Task) EraWithdraw(stakeManagerPubkey solana.PublicKey) error {
 	}
 
 	for _, stakeAccount := range withdrawableAccounts {
-		stakeAccountInfo := lsd_program.StakeAccount{}
+		stakeAccountInfo := utils.StakeAccount{}
 		if err = utils.GetAndDecodeAccountInfo(t.client, stakeAccount, &stakeAccountInfo); err != nil {
 			return fmt.Errorf("get stake account info error: %w", err)
 		}
 
-		eraWithdrawInstruction := lsd_program.NewEraWithdrawInstruction(
+		eraWithdrawInstruction := stake_manager.NewEraWithdrawInstruction(
 			stakeManagerPubkey,
 			stakePool,
 			stakeAccount,
@@ -61,20 +62,12 @@ func (t *Task) EraWithdraw(stakeManagerPubkey solana.PublicKey) error {
 		if err != nil {
 			return fmt.Errorf("new solana transaction error: %w", err)
 		}
-		logrus.Infof("EraWithdraw send tx hash: %s, stakeAccount: %s", tx.Signatures[0], stakeAccount)
 		err = utils.SignAndSendTx(t.client, tx, utils.GetSignFunc(t.feePayerAccount), latestBlockHashRes.Value.LastValidBlockHeight)
-		if err == nil {
-			logrus.Info("EraWithdraw success")
-			return nil
+		if err != nil {
+			return err
 		}
-
-		stakeAccountInfoNew := lsd_program.StakeAccount{}
-		if verifyErr := utils.GetAndDecodeAccountInfo(t.client, stakeAccount, &stakeAccountInfoNew); verifyErr != nil && verifyErr == rpc.ErrNotFound {
-			logrus.Info("EraWithdraw success")
-			return nil
-		}
-
-		return fmt.Errorf("EraWithdraw failed err: %w", err)
+		logrus.Infof("EraWithdraw send tx hash: %s, stakeAccount: %s", tx.Signatures[0], stakeAccount)
+		logrus.Info("EraWithdraw success")
 	}
 
 	return nil

@@ -7,17 +7,18 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/sirupsen/logrus"
-	"github.com/stafiprotocol/solana-lsd-relay/pkg/lsd_program"
+	"github.com/stafiprotocol/solana-lsd-relay/pkg/stake_manager"
 	"github.com/stafiprotocol/solana-lsd-relay/pkg/utils"
 )
 
 func (t *Task) EraMerge(stakeManagerPubkey solana.PublicKey) error {
-	stakeManager, stakePool, err := t.getStakeManagerAndPool(stakeManagerPubkey)
+	stakeManager, stakeManagerProgramID, stakePool, err := utils.GetStakeManagerInfo(t.client, stakeManagerPubkey)
 	if err != nil {
 		return err
 	}
+	stake_manager.SetProgramID(stakeManagerProgramID)
 
-	if !stakeManager.EraProcessData.IsEmpty() {
+	if !utils.IsEmpty(stakeManager.EraProcessData) {
 		return nil
 	}
 
@@ -36,7 +37,7 @@ func (t *Task) EraMerge(stakeManagerPubkey solana.PublicKey) error {
 			continue
 		}
 
-		stakeAccountInfo := lsd_program.StakeAccount{}
+		stakeAccountInfo := utils.StakeAccount{}
 		if err = utils.GetAndDecodeAccountInfo(t.client, stakeAccount, &stakeAccountInfo); err != nil {
 			return fmt.Errorf("get stake account info error: %w", err)
 		}
@@ -62,7 +63,7 @@ func (t *Task) EraMerge(stakeManagerPubkey solana.PublicKey) error {
 			srcStakeAccount := accounts[1]
 			dstStakeAccount := accounts[0]
 
-			eraMergeInstruction := lsd_program.NewEraMergeInstruction(
+			eraMergeInstruction := stake_manager.NewEraMergeInstruction(
 				stakeManagerPubkey,
 				srcStakeAccount,
 				dstStakeAccount,
@@ -82,29 +83,12 @@ func (t *Task) EraMerge(stakeManagerPubkey solana.PublicKey) error {
 				return fmt.Errorf("new solana transaction error: %w", err)
 			}
 
-			logrus.Infof("EraMerge send tx hash: %s, srcStakeAccount: %s, dstStakeAccount: %s", tx.Signatures[0], srcStakeAccount, dstStakeAccount)
 			err = utils.SignAndSendTx(t.client, tx, utils.GetSignFunc(t.feePayerAccount), latestBlockHashRes.Value.LastValidBlockHeight)
-			if err == nil {
-				logrus.Info("EraMerge success")
-				return nil
+			if err != nil {
+				return err
 			}
-
-			stakeManagerNew, _, verifyErr := t.getStakeManagerAndPool(stakeManagerPubkey)
-			if verifyErr != nil {
-				return verifyErr
-			}
-
-			stakeAccountExist := make(map[string]bool)
-			for _, stakeAccount := range stakeManagerNew.StakeAccounts {
-				stakeAccountExist[stakeAccount.String()] = true
-			}
-
-			if !stakeAccountExist[srcStakeAccount.String()] || !stakeAccountExist[dstStakeAccount.String()] {
-				logrus.Info("EraMerge success")
-				continue
-			}
-
-			return fmt.Errorf("EraMerge failed err: %w", err)
+			logrus.Infof("EraMerge send tx hash: %s, srcStakeAccount: %s, dstStakeAccount: %s", tx.Signatures[0], srcStakeAccount, dstStakeAccount)
+			logrus.Info("EraMerge success")
 		}
 	}
 

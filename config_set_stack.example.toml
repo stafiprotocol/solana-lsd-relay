@@ -1,0 +1,21 @@
+
+# Endpoint = "https://api.devnet.solana.com"
+Endpoint = "https://solana-dev-rpc.stafi.io"
+KeystorePath = "./keys/solana_keys.json"
+
+ExportTx = false
+
+LsdProgramID = "795MBfkwwtAX4fWiFqZcJK8D91P9tqqtiSRrSNhBvGzq"
+
+StackAddress = "EpgquacesXp8h7nk9j5KcnzDVATFKLE995cuhj1hRbpR"
+
+## signers
+FeePayerAccount = "ErCsmTQhM9qt17ce8XDTasKo76FEdg2scP2UX4VLxKDb"
+AdminAccount = "GgAy6GnqaPJUdGfCQGMgW2fGMMvmxc3E7a2oizFuCbhF"
+
+
+# StakeManagerAddress = "EpgquacesXp8h7nk9j5KcnzDVATFKLE995cuhj1hRbpR"
+# StackFeeCommission = 100000000
+# AddEntrustedStakeManagerAddress = ""
+# RemoveEntrustedStakeManagerAddress = ""
+# NewAdminAddress = ""

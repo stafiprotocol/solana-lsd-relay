@@ -23,6 +23,7 @@ import (
 	"github.com/gagliardetto/solana-go/cli"
 	"github.com/gagliardetto/solana-go/vault"
 	"github.com/spf13/cobra"
+	"github.com/stafiprotocol/solana-lsd-relay/cmd/common"
 	"github.com/stafiprotocol/solana-lsd-relay/pkg/utils"
 )
 
@@ -31,7 +32,7 @@ func vaultImportCmd() *cobra.Command {
 		Use:   "import",
 		Short: "Import private keys taking input from the shell",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			walletFile, err := cmd.Flags().GetString(flagKeystorePath)
+			walletFile, err := cmd.Flags().GetString(common.FlagKeystorePath)
 			if err != nil {
 				return err
 			}
@@ -73,13 +74,13 @@ func vaultImportCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringP(flagKeystorePath, "", defaultKeystorePath, "Wallet file that contains encrypted key material")
+	cmd.Flags().StringP(common.FlagKeystorePath, "", common.DefaultKeystorePath, "Wallet file that contains encrypted key material")
 	return cmd
 }
 
 func mustGetWallet(cmd *cobra.Command, create bool) (*vault.Vault, vault.SecretBoxer) {
 	if create {
-		walletFile, err := cmd.Flags().GetString(flagKeystorePath)
+		walletFile, err := cmd.Flags().GetString(common.FlagKeystorePath)
 		exitOnError("wallet create", err)
 
 		if _, err := os.Stat(walletFile); err != nil {
@@ -92,7 +93,7 @@ func mustGetWallet(cmd *cobra.Command, create bool) (*vault.Vault, vault.SecretB
 		}
 	}
 
-	walletFile, err := cmd.Flags().GetString(flagKeystorePath)
+	walletFile, err := cmd.Flags().GetString(common.FlagKeystorePath)
 	if err != nil {
 		exitOnError("get keystore path", err)
 	}

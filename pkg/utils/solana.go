@@ -12,7 +12,11 @@ import (
 	computebudget "github.com/gagliardetto/solana-go/programs/compute-budget"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/sirupsen/logrus"
+	"github.com/stafiprotocol/solana-lsd-relay/pkg/stake_manager"
 )
+
+var StakePoolSeed = []byte("stake_pool_seed")
+var TokenMintSeed = []byte("token_mint_seed")
 
 var ErrExpired = fmt.Errorf("expired")
 
@@ -138,4 +142,79 @@ func GetMinDelegationAmount(rpcClient *rpc.Client) (uint64, error) {
 	}{}
 	err := rpcClient.RPCCallForInto(context.Background(), &res, "getStakeMinimumDelegation", nil)
 	return res.Value, err
+}
+
+type StakeAccount struct {
+	Type uint32 // 0 uninitialized 1 initialized 2 delegated 3 rewardspool
+	Info struct {
+		Meta struct {
+			RentExemptReserve int64
+			Authorized        struct {
+				Staker     solana.PublicKey
+				Withdrawer solana.PublicKey
+				Lockup     struct {
+					UnixTimeStamp int64
+					Epoch         uint64
+					Custodian     solana.PublicKey
+				}
+			}
+		}
+		Stake struct {
+			Delegation      Delegation
+			CreditsObserved uint64
+		}
+	}
+}
+
+type Delegation struct {
+	Voter              solana.PublicKey
+	Stake              uint64
+	ActivationEpoch    uint64 //epoch when delegate
+	DeactivationEpoch  uint64 //epoch when deactive
+	WarmupCooldownRate float64
+}
+
+// era process data helper functions
+func IsEmpty(data stake_manager.EraProcessData) bool {
+	return data.NeedBond == 0 && data.NeedUnbond == 0 && data.NewActive == 0 && data.OldActive == 0 && len(data.PendingStakeAccounts) == 0
+}
+
+func IsNeedSkipBond(data stake_manager.EraProcessData, minDelegationAmount uint64) bool {
+	return data.NeedBond > 0 && data.NeedBond < minDelegationAmount
+}
+
+func IsNeedBond(data stake_manager.EraProcessData, minDelegationAmount uint64) bool {
+	return data.NeedBond >= minDelegationAmount
+}
+
+func IsNeedUnbond(data stake_manager.EraProcessData) bool {
+	return data.NeedUnbond > 0
+}
+
+func IsNeedUpdateActive(data stake_manager.EraProcessData) bool {
+	return data.NeedUnbond == 0 && data.NeedBond == 0 && len(data.PendingStakeAccounts) > 0
+}
+
+func IsNeedUpdateRate(data stake_manager.EraProcessData) bool {
+	return data.NeedUnbond == 0 && data.NeedBond == 0 && len(data.PendingStakeAccounts) == 0 && data.NewActive != 0 && data.OldActive != 0
+}
+
+func GetStakeManagerInfo(client *rpc.Client, stakeManagerPubkey solana.PublicKey) (*stake_manager.StakeManager, solana.PublicKey, solana.PublicKey, error) {
+	stakeManager := stake_manager.StakeManager{}
+	accountInfo, err := client.GetAccountInfoWithOpts(context.Background(), stakeManagerPubkey, &rpc.GetAccountInfoOpts{
+		Encoding:   solana.EncodingBase64,
+		Commitment: rpc.CommitmentConfirmed,
+	})
+	if err != nil {
+		return nil, solana.PublicKey{}, solana.PublicKey{}, err
+	}
+
+	bin.NewBorshDecoder(accountInfo.Value.Data.GetBinary()).Decode(&stakeManager)
+
+	stakePool, _, err := solana.FindProgramAddress([][]byte{stakeManagerPubkey.Bytes(), StakePoolSeed}, accountInfo.Value.Owner)
+	if err != nil {
+		return nil, solana.PublicKey{}, solana.PublicKey{}, err
+	}
+
+	return &stakeManager, accountInfo.Value.Owner, stakePool, nil
 }

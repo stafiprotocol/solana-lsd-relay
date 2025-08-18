@@ -7,22 +7,23 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/sirupsen/logrus"
-	"github.com/stafiprotocol/solana-lsd-relay/pkg/lsd_program"
+	"github.com/stafiprotocol/solana-lsd-relay/pkg/stake_manager"
 	"github.com/stafiprotocol/solana-lsd-relay/pkg/utils"
 )
 
 func (t *Task) EraBond(stakeManagerPubkey solana.PublicKey) error {
-	stakeManager, stakePool, err := t.getStakeManagerAndPool(stakeManagerPubkey)
+	stakeManager, stakeManagerProgramID, stakePool, err := utils.GetStakeManagerInfo(t.client, stakeManagerPubkey)
 	if err != nil {
 		return err
 	}
+	stake_manager.SetProgramID(stakeManagerProgramID)
 
 	minDelegationAmount, err := utils.GetMinDelegationAmount(t.client)
 	if err != nil {
 		return err
 	}
 
-	if !stakeManager.EraProcessData.IsNeedBond(minDelegationAmount) {
+	if !utils.IsNeedBond(stakeManager.EraProcessData, minDelegationAmount) {
 		return nil
 	}
 
@@ -31,7 +32,7 @@ func (t *Task) EraBond(stakeManagerPubkey solana.PublicKey) error {
 		return err
 	}
 
-	eraBondInstruction := lsd_program.NewEraBondInstruction(
+	eraBondInstruction := stake_manager.NewEraBondInstruction(
 		stakeManagerPubkey,
 		stakeManager.Validators[0],
 		stakePool,
@@ -61,16 +62,6 @@ func (t *Task) EraBond(stakeManagerPubkey solana.PublicKey) error {
 
 	logrus.Infof("EraBond send tx hash: %s, stakeAccount: %s, bond: %d",
 		tx.Signatures[0], stakeAccount.PublicKey(), stakeManager.EraProcessData.NeedBond)
-
-	// verify tx success
-	stakeManagerNew, _, getErr := t.getStakeManagerAndPool(stakeManagerPubkey)
-	if getErr != nil {
-		return getErr
-	}
-	if !stakeManagerNew.EraProcessData.IsNeedBond(minDelegationAmount) {
-		logrus.Info("EraBond success")
-		return nil
-	}
-
-	return fmt.Errorf("EraBond failed err: %w", err)
+	logrus.Info("EraBond success")
+	return nil
 }

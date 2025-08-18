@@ -2,7 +2,7 @@
 Endpoint = "https://api.devnet.solana.com"
 KeystorePath = "./keys/solana_keys.json"
 
-LsdProgramID = "795MBfkwwtAX4fWiFqZcJK8D91P9tqqtiSRrSNhBvGzq"
+StackProgramID = "795MBfkwwtAX4fWiFqZcJK8D91P9tqqtiSRrSNhBvGzq"
 
 ## signers
 FeePayerAccount = "ErCsmTQhM9qt17ce8XDTasKo76FEdg2scP2UX4VLxKDb"

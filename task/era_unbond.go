@@ -7,23 +7,24 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/sirupsen/logrus"
-	"github.com/stafiprotocol/solana-lsd-relay/pkg/lsd_program"
+	"github.com/stafiprotocol/solana-lsd-relay/pkg/stake_manager"
 	"github.com/stafiprotocol/solana-lsd-relay/pkg/utils"
 )
 
 func (t *Task) EraUnbond(stakeManagerPubkey solana.PublicKey) error {
-	stakeManager, stakePool, err := t.getStakeManagerAndPool(stakeManagerPubkey)
+	stakeManager, stakeManagerProgramID, stakePool, err := utils.GetStakeManagerInfo(t.client, stakeManagerPubkey)
 	if err != nil {
 		return err
 	}
+	stake_manager.SetProgramID(stakeManagerProgramID)
 
-	if !stakeManager.EraProcessData.IsNeedUnbond() {
+	if !utils.IsNeedUnbond(stakeManager.EraProcessData) {
 		return nil
 	}
 
 	stakeAccount := stakeManager.StakeAccounts[0] // use first
 
-	stakeAccountInfo := lsd_program.StakeAccount{}
+	stakeAccountInfo := utils.StakeAccount{}
 	if err = utils.GetAndDecodeAccountInfo(t.client, stakeAccount, &stakeAccountInfo); err != nil {
 		return fmt.Errorf("get stake account info error: %w", err)
 	}
@@ -34,7 +35,7 @@ func (t *Task) EraUnbond(stakeManagerPubkey solana.PublicKey) error {
 		return fmt.Errorf("new random private key for split stake account error: %w", err)
 	}
 
-	eraUnbondInstruction := lsd_program.NewEraUnbondInstruction(
+	eraUnbondInstruction := stake_manager.NewEraUnbondInstruction(
 		stakeManagerPubkey,
 		stakePool,
 		stakeAccount,
@@ -42,7 +43,6 @@ func (t *Task) EraUnbond(stakeManagerPubkey solana.PublicKey) error {
 		validator,
 		t.feePayerAccount.PublicKey(),
 		solana.SysVarClockPubkey,
-		solana.SysVarRentPubkey,
 		solana.SysVarStakeHistoryPubkey,
 		solana.StakeProgramID,
 		solana.SystemProgramID,
@@ -59,20 +59,11 @@ func (t *Task) EraUnbond(stakeManagerPubkey solana.PublicKey) error {
 	}
 
 	err = utils.SignAndSendTx(t.client, tx, utils.GetSignFunc(t.feePayerAccount, splitStakeAccount), latestBlockHashRes.Value.LastValidBlockHeight)
-	txHash := tx.Signatures[0].String()
-	logrus.Infof("EraUnbond send tx hash: %s, unbondAmount: %d", txHash, stakeManager.EraProcessData.NeedUnbond)
-	if err == nil {
-		logrus.Infof("EraUnbond success")
-		return nil
+	if err != nil {
+		return err
 	}
+	logrus.Infof("EraUnbond send tx hash: %s, unbondAmount: %d", tx.Signatures[0], stakeManager.EraProcessData.NeedUnbond)
+	logrus.Infof("EraUnbond success")
 
-	stakeManagerNew, _, getErr := t.getStakeManagerAndPool(stakeManagerPubkey)
-	if getErr != nil {
-		return getErr
-	} else if !stakeManagerNew.EraProcessData.IsNeedUnbond() {
-		logrus.Info("EraUnbond success")
-		return nil
-	}
-
-	return fmt.Errorf("EraUnbond failed err: %w", err)
+	return nil
 }

@@ -1,0 +1,201 @@
+{
+    "version": "0.1.0",
+    "name": "stack",
+    "instructions": [
+        {
+            "name": "initializeStack",
+            "accounts": [
+                {
+                    "name": "stack",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "rentPayer",
+                    "isMut": true,
+                    "isSigner": true
+                },
+                {
+                    "name": "admin",
+                    "isMut": false,
+                    "isSigner": true
+                },
+                {
+                    "name": "systemProgram",
+                    "isMut": false,
+                    "isSigner": false
+                }
+            ],
+            "args": [
+                {
+                    "name": "stackIndex",
+                    "type": "u8"
+                }
+            ]
+        },
+        {
+            "name": "transferStackAdmin",
+            "accounts": [
+                {
+                    "name": "stack",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "admin",
+                    "isMut": false,
+                    "isSigner": true
+                }
+            ],
+            "args": [
+                {
+                    "name": "newAdmin",
+                    "type": "publicKey"
+                }
+            ]
+        },
+        {
+            "name": "acceptStackAdmin",
+            "accounts": [
+                {
+                    "name": "pendingAdmin",
+                    "isMut": false,
+                    "isSigner": true
+                },
+                {
+                    "name": "stack",
+                    "isMut": true,
+                    "isSigner": false
+                }
+            ],
+            "args": []
+        },
+        {
+            "name": "setStackFeeCommission",
+            "accounts": [
+                {
+                    "name": "stack",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "admin",
+                    "isMut": false,
+                    "isSigner": true
+                }
+            ],
+            "args": [
+                {
+                    "name": "stackFeeCommission",
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "addEntrustedStakeManager",
+            "accounts": [
+                {
+                    "name": "stack",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "admin",
+                    "isMut": false,
+                    "isSigner": true
+                }
+            ],
+            "args": [
+                {
+                    "name": "stakeManager",
+                    "type": "publicKey"
+                }
+            ]
+        },
+        {
+            "name": "removeEntrustedStakeManager",
+            "accounts": [
+                {
+                    "name": "stack",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
+                    "name": "admin",
+                    "isMut": false,
+                    "isSigner": true
+                }
+            ],
+            "args": [
+                {
+                    "name": "stakeManager",
+                    "type": "publicKey"
+                }
+            ]
+        }
+    ],
+    "accounts": [
+        {
+            "name": "Stack",
+            "type": {
+                "kind": "struct",
+                "fields": [
+                    {
+                        "name": "admin",
+                        "type": "publicKey"
+                    },
+                    {
+                        "name": "pendingAdmin",
+                        "type": "publicKey"
+                    },
+                    {
+                        "name": "stackFeeCommission",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "stakeManagersLenLimit",
+                        "type": "u64"
+                    },
+                    {
+                        "name": "entrustedStakeManagers",
+                        "type": {
+                            "vec": "publicKey"
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "errors": [
+        {
+            "code": 6000,
+            "name": "ProgramIdNotMatch",
+            "msg": "Program id not match"
+        },
+        {
+            "code": 6001,
+            "name": "RemainingAccountsNotMatch",
+            "msg": "Remaining accounts not match"
+        },
+        {
+            "code": 6002,
+            "name": "AdminNotMatch",
+            "msg": "Admin not match"
+        },
+        {
+            "code": 6003,
+            "name": "PendingAdminNotMatch",
+            "msg": "Pending admin not match"
+        },
+        {
+            "code": 6004,
+            "name": "StakeManagerAlreadyExist",
+            "msg": "Stake manager already exist"
+        },
+        {
+            "code": 6005,
+            "name": "StakeManagerNotExist",
+            "msg": "Stake manager not exist"
+        }
+    ]
+}

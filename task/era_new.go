@@ -7,16 +7,16 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/sirupsen/logrus"
-	"github.com/stafiprotocol/solana-lsd-relay/pkg/lsd_program"
+	"github.com/stafiprotocol/solana-lsd-relay/pkg/stake_manager"
 	"github.com/stafiprotocol/solana-lsd-relay/pkg/utils"
 )
 
 func (t *Task) EraNew(stakeManagerPubkey solana.PublicKey) error {
-	stakeManager := lsd_program.StakeManager{}
-	err := utils.GetAndDecodeAccountInfo(t.client, stakeManagerPubkey, &stakeManager)
+	stakeManager, stakeManagerProgramID, _, err := utils.GetStakeManagerInfo(t.client, stakeManagerPubkey)
 	if err != nil {
 		return err
 	}
+	stake_manager.SetProgramID(stakeManagerProgramID)
 
 	epochInfo, err := t.client.GetEpochInfo(context.Background(), rpc.CommitmentConfirmed)
 	if err != nil {
@@ -26,11 +26,11 @@ func (t *Task) EraNew(stakeManagerPubkey solana.PublicKey) error {
 		return nil
 	}
 
-	if !stakeManager.EraProcessData.IsEmpty() {
+	if !utils.IsEmpty(stakeManager.EraProcessData) {
 		return nil
 	}
 
-	eraNewInstruction := lsd_program.NewEraNewInstruction(stakeManagerPubkey, solana.SysVarClockPubkey).Build()
+	eraNewInstruction := stake_manager.NewEraNewInstruction(stakeManagerPubkey).Build()
 
 	latestBlockHashRes, err := t.client.GetLatestBlockhash(context.Background(), rpc.CommitmentConfirmed)
 	if err != nil {
@@ -43,23 +43,11 @@ func (t *Task) EraNew(stakeManagerPubkey solana.PublicKey) error {
 	}
 
 	err = utils.SignAndSendTx(t.client, tx, utils.GetSignFunc(t.feePayerAccount), latestBlockHashRes.Value.LastValidBlockHeight)
+	if err != nil {
+		return err
+	}
 	txHash := tx.Signatures[0].String()
 	logrus.Infof("EraNew send tx hash: %s, newEra: %d", txHash, stakeManager.LatestEra+1)
-	if err == nil {
-		logrus.Infof("EraNew success")
-		return nil
-	}
-
-	// verify tx success
-	stakeManagerNew, _, getErr := t.getStakeManagerAndPool(stakeManagerPubkey)
-	if getErr != nil {
-		return getErr
-	}
-
-	if stakeManagerNew.LatestEra > stakeManager.LatestEra {
-		logrus.Infof("EraNew success")
-		return nil
-	}
-
-	return fmt.Errorf("EraNew failed err: %w", err)
+	logrus.Infof("EraNew success")
+	return nil
 }

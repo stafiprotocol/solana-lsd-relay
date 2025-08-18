@@ -2,12 +2,9 @@
 Endpoint = "https://api.devnet.solana.com"
 KeystorePath = "./keys/solana_keys.json"
 
-LsdProgramID = "795MBfkwwtAX4fWiFqZcJK8D91P9tqqtiSRrSNhBvGzq"
-
+StakeManagerProgramID = "795MBfkwwtAX4fWiFqZcJK8D91P9tqqtiSRrSNhBvGzq"
 StackAddress = "EpgquacesXp8h7nk9j5KcnzDVATFKLE995cuhj1hRbpR"
-LsdTokenMintAddress = "7Ba9vKFt7ossKmQqxqm2UBLDKhc8sjYubqUH8d5k4iPa"
 ValidatorAddress = "vgcDar2pryHvMgPkKaZfh8pQy4BJxv7SpwUG7zinWjG"
-StakeManagerAddress = "JAAGMA3nXSFq3QhSMC9Trkf5hneMGoGRLaGtEkmL1Nmj"
 
 ## signers
 FeePayerAccount = "ErCsmTQhM9qt17ce8XDTasKo76FEdg2scP2UX4VLxKDb"

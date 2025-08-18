@@ -34,11 +34,10 @@ fmt :
 
 anchor:
 	@echo "  >  \033[32mGenerating anchor bindings...\033[0m "
-	GOTOOLCHAIN=go1.22.7 go run  github.com/gagliardetto/anchor-go@v0.3.1 -src ./pkg/lsd_program/lsd_program.json -dst ./pkg/lsd_program/
-
-swagger:
-	@echo "  >  \033[32mBuilding swagger docs...\033[0m "
-	swag init --parseDependency
+	find "./pkg/stake_manager" -type f -name '*.go' -exec rm -f {} +
+	GOTOOLCHAIN=go1.22.7 go run  github.com/gagliardetto/anchor-go@v0.3.1 -src ./pkg/stake_manager/stake_manager.json -dst ./pkg/stake_manager/
+	find "./pkg/stack" -type f -name '*.go' -exec rm -f {} +
+	GOTOOLCHAIN=go1.22.7 go run  github.com/gagliardetto/anchor-go@v0.3.1 -src ./pkg/stack/stack.json -dst ./pkg/stack/
 
 get-lint:
 	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s latest

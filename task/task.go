@@ -1,6 +1,7 @@
 package task
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"runtime"
@@ -10,20 +11,20 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/sirupsen/logrus"
-	"github.com/stafiprotocol/solana-lsd-relay/pkg/config"
-	"github.com/stafiprotocol/solana-lsd-relay/pkg/lsd_program"
+	"github.com/stafiprotocol/solana-lsd-relay/pkg/stack"
 	"github.com/stafiprotocol/solana-lsd-relay/pkg/utils"
 	"golang.org/x/time/rate"
 )
 
-var stakePoolSeed = []byte("pool_seed")
-
 type Task struct {
-	stop chan struct{}
-	cfg  config.ConfigStart
+	stop                chan struct{}
+	endpoint            string
+	stakeManagerAddress string
+	stackAddress        string
 
-	lsdProgramID       solana.PublicKey
+	stackProgramID     solana.PublicKey
 	stackAccountPubkey solana.PublicKey
+
 	stakeManagerPubkey solana.PublicKey
 
 	feePayerAccount solana.PrivateKey
@@ -38,32 +39,45 @@ type Handler struct {
 	name   string
 }
 
-func NewTask(cfg config.ConfigStart, feePayer solana.PrivateKey) *Task {
+func NewTask(endpoint, stakeManagerAddress, stackAddress string, feePayer solana.PrivateKey) *Task {
 	s := &Task{
-		stop:            make(chan struct{}),
-		cfg:             cfg,
-		feePayerAccount: feePayer,
-		entrustedMode:   true,
+		stop:                make(chan struct{}),
+		endpoint:            endpoint,
+		stakeManagerAddress: stakeManagerAddress,
+		stackAddress:        stackAddress,
+		feePayerAccount:     feePayer,
+		entrustedMode:       false,
 	}
 	return s
 }
 
 func (t *Task) Start() error {
 	t.client = rpc.NewWithCustomRPCClient(rpc.NewWithLimiter(
-		t.cfg.Endpoint,
+		t.endpoint,
 		rate.Every(time.Second), // time frame
 		5,                       // limit of requests per time frame
 	))
 
-	lsdProgramID := solana.MustPublicKeyFromBase58(t.cfg.LsdProgramID)
-	stackAccountPubkey := solana.MustPublicKeyFromBase58(t.cfg.StackAddress)
-
-	t.lsdProgramID = lsdProgramID
-	t.stackAccountPubkey = stackAccountPubkey
-	if len(t.cfg.StakeManagerAddress) > 0 {
-		t.stakeManagerPubkey = solana.MustPublicKeyFromBase58(t.cfg.StakeManagerAddress)
+	if len(t.stakeManagerAddress) > 0 {
 		t.entrustedMode = false
+		t.stakeManagerPubkey = solana.MustPublicKeyFromBase58(t.stakeManagerAddress)
+
+		stakeManagerAccount, _, _, err := utils.GetStakeManagerInfo(t.client, t.stakeManagerPubkey)
+		if err != nil {
+			return err
+		}
+
+		t.stackAccountPubkey = stakeManagerAccount.Stack
+	} else {
+		t.entrustedMode = true
+		t.stackAccountPubkey = solana.MustPublicKeyFromBase58(t.stackAddress)
 	}
+	stackAccount, err := t.client.GetAccountInfo(context.Background(), t.stackAccountPubkey)
+	if err != nil {
+		return err
+	}
+	t.stackProgramID = stackAccount.Value.Owner
+	stack.SetProgramID(t.stackProgramID)
 
 	t.appendHandlers(t.EraNew, t.EraSkipBond, t.EraBond, t.EraUnbond, t.EraUpdateActive, t.EraUpdateRate, t.EraMerge, t.EraWithdraw)
 	SafeGoWithRestart(t.handler)
@@ -122,7 +136,7 @@ func (t *Task) handler() {
 
 func (t *Task) handleEra() error {
 	if t.entrustedMode {
-		stackAccount := lsd_program.Stack{}
+		stackAccount := stack.Stack{}
 		err := utils.GetAndDecodeAccountInfo(t.client, t.stackAccountPubkey, &stackAccount)
 		if err != nil {
 			return err
@@ -151,19 +165,4 @@ func (t *Task) handleEra() error {
 		}
 	}
 	return nil
-}
-
-func (t *Task) getStakeManagerAndPool(stakeManagerPubkey solana.PublicKey) (*lsd_program.StakeManager, solana.PublicKey, error) {
-	stakeManager := lsd_program.StakeManager{}
-	err := utils.GetAndDecodeAccountInfo(t.client, stakeManagerPubkey, &stakeManager)
-	if err != nil {
-		return nil, solana.PublicKey{}, err
-	}
-
-	stakePool, _, err := solana.FindProgramAddress([][]byte{stakeManagerPubkey.Bytes(), stakePoolSeed}, t.lsdProgramID)
-	if err != nil {
-		return nil, solana.PublicKey{}, err
-	}
-
-	return &stakeManager, stakePool, nil
 }

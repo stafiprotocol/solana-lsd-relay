@@ -1,11 +1,11 @@
 
-Endpoint = "https://api.devnet.solana.com"
+# Endpoint = "https://api.devnet.solana.com"
+Endpoint = "https://solana-dev-rpc.stafi.io"
 KeystorePath = "./keys/solana_keys.json"
 # keystore will be omitted if ExportTx is enabled
 ExportTx = false
 
-LsdProgramID = "795MBfkwwtAX4fWiFqZcJK8D91P9tqqtiSRrSNhBvGzq"
-StakeManagerAddress = "JAAGMA3nXSFq3QhSMC9Trkf5hneMGoGRLaGtEkmL1Nmj"
+StakeManagerAddress = "5T3iezF2qUNfHGSWKLm6SVfZYVE8yipRbmUzGgiQaRs4"
 
 ## signers
 FeePayerAccount = "ErCsmTQhM9qt17ce8XDTasKo76FEdg2scP2UX4VLxKDb"
@@ -19,4 +19,3 @@ AdminAccount = "GgAy6GnqaPJUdGfCQGMgW2fGMMvmxc3E7a2oizFuCbhF"
 # PlatformFeeCommission = 0
 # NewBalancerAddress = ""
 # NewAdminAddress = ""
-

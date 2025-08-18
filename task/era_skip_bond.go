@@ -7,26 +7,27 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/sirupsen/logrus"
-	"github.com/stafiprotocol/solana-lsd-relay/pkg/lsd_program"
+	"github.com/stafiprotocol/solana-lsd-relay/pkg/stake_manager"
 	"github.com/stafiprotocol/solana-lsd-relay/pkg/utils"
 )
 
 func (t *Task) EraSkipBond(stakeManagerPubkey solana.PublicKey) error {
-	stakeManager, _, err := t.getStakeManagerAndPool(stakeManagerPubkey)
+	stakeManager, stakeManagerProgramID, _, err := utils.GetStakeManagerInfo(t.client, stakeManagerPubkey)
 	if err != nil {
 		return err
 	}
+	stake_manager.SetProgramID(stakeManagerProgramID)
 
 	minDelegationAmount, err := utils.GetMinDelegationAmount(t.client)
 	if err != nil {
 		return err
 	}
 
-	if !stakeManager.EraProcessData.IsNeedSkipBond(minDelegationAmount) {
+	if !utils.IsNeedSkipBond(stakeManager.EraProcessData, minDelegationAmount) {
 		return nil
 	}
 
-	eraSkipBondInstruction := lsd_program.NewEraSkipBondInstruction(stakeManagerPubkey, solana.StakeProgramID).Build()
+	eraSkipBondInstruction := stake_manager.NewEraSkipBondInstruction(stakeManagerPubkey, solana.StakeProgramID).Build()
 
 	latestBlockHashRes, err := t.client.GetLatestBlockhash(context.Background(), rpc.CommitmentConfirmed)
 	if err != nil {
@@ -39,21 +40,11 @@ func (t *Task) EraSkipBond(stakeManagerPubkey solana.PublicKey) error {
 	}
 
 	err = utils.SignAndSendTx(t.client, tx, utils.GetSignFunc(t.feePayerAccount), latestBlockHashRes.Value.LastValidBlockHeight)
+	if err != nil {
+		return err
+	}
 	txHash := tx.Signatures[0].String()
 	logrus.Infof("EraSkipBond send tx hash: %s, skipBondAmount: %d", txHash, stakeManager.EraProcessData.NeedBond)
-	if err == nil {
-		logrus.Infof("EraSkipBond success")
-		return nil
-	}
-
-	stakeManagerNew, _, getErr := t.getStakeManagerAndPool(stakeManagerPubkey)
-	if getErr != nil {
-		return getErr
-	}
-	if !stakeManagerNew.EraProcessData.IsNeedSkipBond(minDelegationAmount) {
-		logrus.Info("EraSkipBond success")
-		return nil
-	}
-
-	return fmt.Errorf("EraSkipBond failed err: %w", err)
+	logrus.Infof("EraSkipBond success")
+	return nil
 }

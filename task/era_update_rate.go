@@ -8,21 +8,23 @@ import (
 	associatedtokenaccount "github.com/gagliardetto/solana-go/programs/associated-token-account"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/sirupsen/logrus"
-	"github.com/stafiprotocol/solana-lsd-relay/pkg/lsd_program"
+	"github.com/stafiprotocol/solana-lsd-relay/pkg/stack"
+	"github.com/stafiprotocol/solana-lsd-relay/pkg/stake_manager"
 	"github.com/stafiprotocol/solana-lsd-relay/pkg/utils"
 )
 
 func (t *Task) EraUpdateRate(stakeManagerPubkey solana.PublicKey) error {
-	stakeManager, stakePool, err := t.getStakeManagerAndPool(stakeManagerPubkey)
+	stakeManager, stakeManagerProgramID, stakePool, err := utils.GetStakeManagerInfo(t.client, stakeManagerPubkey)
 	if err != nil {
 		return err
 	}
+	stake_manager.SetProgramID(stakeManagerProgramID)
 
-	if !stakeManager.EraProcessData.IsNeedUpdateRate() {
+	if !utils.IsNeedUpdateRate(stakeManager.EraProcessData) {
 		return nil
 	}
 
-	stackAccount := lsd_program.Stack{}
+	stackAccount := stack.Stack{}
 	if err = utils.GetAndDecodeAccountInfo(t.client, t.stackAccountPubkey, &stackAccount); err != nil {
 		return fmt.Errorf("get stack account info error: %w", err)
 	}
@@ -69,7 +71,7 @@ func (t *Task) EraUpdateRate(stakeManagerPubkey solana.PublicKey) error {
 		}
 	}
 
-	stackFeeAccount, _, err := solana.FindProgramAddress([][]byte{t.stackAccountPubkey.Bytes(), stakeManager.LsdTokenMint.Bytes()}, t.lsdProgramID)
+	stackFeeAccount, _, err := solana.FindProgramAddress([][]byte{t.stackAccountPubkey.Bytes(), stakeManager.LsdTokenMint.Bytes()}, stakeManagerProgramID)
 	if err != nil {
 		return err
 	}
@@ -80,24 +82,29 @@ func (t *Task) EraUpdateRate(stakeManagerPubkey solana.PublicKey) error {
 	}
 
 	var tokenProgramAccount solana.PublicKey
-	if lsdTokenMintAccount.Value.Owner == solana.Token2022ProgramID {
+	switch lsdTokenMintAccount.Value.Owner {
+	case solana.Token2022ProgramID:
 		tokenProgramAccount = solana.Token2022ProgramID
-	} else if lsdTokenMintAccount.Value.Owner == solana.TokenProgramID {
+	case solana.TokenProgramID:
 		tokenProgramAccount = solana.TokenProgramID
-	} else {
+	default:
 		return fmt.Errorf("lsd token mint account owner is not token2022 or token program")
 	}
 
-	eraUpdateRateInstruction := lsd_program.NewEraUpdateRateInstruction(
+	eraUpdateRateInstruction := stake_manager.NewEraUpdateRateInstruction(
 		stakeManagerPubkey,
 		t.stackAccountPubkey,
+		stakeManager.Admin,
+		stackAccount.Admin,
 		stakePool,
 		stakeManager.LsdTokenMint,
 		platformFeeRecipient,
 		stackFeeRecipient,
 		stackFeeAccount,
+		t.feePayerAccount.PublicKey(),
 		associatedtokenaccount.ProgramID,
 		tokenProgramAccount,
+		solana.SystemProgramID,
 	).Build()
 
 	instructions = append(instructions, eraUpdateRateInstruction)
@@ -112,22 +119,19 @@ func (t *Task) EraUpdateRate(stakeManagerPubkey solana.PublicKey) error {
 		return fmt.Errorf("new solana transaction error: %w", err)
 	}
 
+	err = utils.SignAndSendTx(t.client, tx, utils.GetSignFunc(t.feePayerAccount), latestBlockHashRes.Value.LastValidBlockHeight)
+	if err != nil {
+		return err
+	}
 	logrus.Infof("EraUpdateRate send tx hash: %s, pipelineActive: %d, eraSnapshotActive: %d, eraProcessActive: %d, rate(old): %d",
 		tx.Signatures[0], stakeManager.Active, stakeManager.EraProcessData.OldActive, stakeManager.EraProcessData.NewActive, stakeManager.Rate)
-	err = utils.SignAndSendTx(t.client, tx, utils.GetSignFunc(t.feePayerAccount), latestBlockHashRes.Value.LastValidBlockHeight)
-	if err == nil {
-		logrus.Info("EraUpdateActive success")
-		return nil
-	}
 
-	stakeManagerNew, _, verifyErr := t.getStakeManagerAndPool(stakeManagerPubkey)
-	if verifyErr != nil {
-		return verifyErr
+	stakeManagerNew, _, _, err := utils.GetStakeManagerInfo(t.client, stakeManagerPubkey)
+	if err != nil {
+		return err
 	}
-	if !stakeManagerNew.EraProcessData.IsNeedUpdateRate() {
+	if !utils.IsNeedUpdateRate(stakeManagerNew.EraProcessData) {
 		logrus.Infof("EraUpdateRate success, rate(new): %d", stakeManagerNew.Rate)
-		return nil
 	}
-
-	return fmt.Errorf("EraUpdateRate failed err: %w", err)
+	return nil
 }

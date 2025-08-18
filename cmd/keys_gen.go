@@ -19,6 +19,7 @@ import (
 
 	"github.com/gagliardetto/solana-go"
 	"github.com/spf13/cobra"
+	"github.com/stafiprotocol/solana-lsd-relay/cmd/common"
 	"github.com/stafiprotocol/solana-lsd-relay/pkg/utils"
 )
 
@@ -36,7 +37,7 @@ func vaultGenCmd() *cobra.Command {
 				return fmt.Errorf("specify --keys")
 			}
 
-			walletFile, err := cmd.Flags().GetString(flagKeystorePath)
+			walletFile, err := cmd.Flags().GetString(common.FlagKeystorePath)
 			if err != nil {
 				return err
 			}
@@ -77,6 +78,6 @@ func vaultGenCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().IntP("keys", "k", 0, "Number of keypairs to create")
-	cmd.Flags().StringP(flagKeystorePath, "", defaultKeystorePath, "Wallet file that contains encrypted key material")
+	cmd.Flags().StringP(common.FlagKeystorePath, "", common.DefaultKeystorePath, "Wallet file that contains encrypted key material")
 	return cmd
 }
