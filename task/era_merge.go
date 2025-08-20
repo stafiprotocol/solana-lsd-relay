@@ -82,8 +82,8 @@ func (t *Task) EraMerge(stakeManagerPubkey solana.PublicKey) error {
 				return fmt.Errorf("new solana transaction error: %w", err)
 			}
 
-			logrus.Infof("EraMerge send tx hash: %s, srcStakeAccount: %s, dstStakeAccount: %s", tx.Signatures[0], srcStakeAccount, dstStakeAccount)
 			err = utils.SignAndSendTx(t.client, tx, utils.GetSignFunc(t.feePayerAccount), latestBlockHashRes.Value.LastValidBlockHeight)
+			logrus.Infof("EraMerge send tx hash: %s, srcStakeAccount: %s, dstStakeAccount: %s", tx.Signatures[0], srcStakeAccount, dstStakeAccount)
 			if err == nil {
 				logrus.Info("EraMerge success")
 				return nil
