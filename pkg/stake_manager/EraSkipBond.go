@@ -14,15 +14,13 @@ import (
 type EraSkipBond struct {
 
 	// [0] = [WRITE] stakeManager
-	//
-	// [1] = [] stakeProgram
 	ag_solanago.AccountMetaSlice `bin:"-"`
 }
 
 // NewEraSkipBondInstructionBuilder creates a new `EraSkipBond` instruction builder.
 func NewEraSkipBondInstructionBuilder() *EraSkipBond {
 	nd := &EraSkipBond{
-		AccountMetaSlice: make(ag_solanago.AccountMetaSlice, 2),
+		AccountMetaSlice: make(ag_solanago.AccountMetaSlice, 1),
 	}
 	return nd
 }
@@ -36,17 +34,6 @@ func (inst *EraSkipBond) SetStakeManagerAccount(stakeManager ag_solanago.PublicK
 // GetStakeManagerAccount gets the "stakeManager" account.
 func (inst *EraSkipBond) GetStakeManagerAccount() *ag_solanago.AccountMeta {
 	return inst.AccountMetaSlice.Get(0)
-}
-
-// SetStakeProgramAccount sets the "stakeProgram" account.
-func (inst *EraSkipBond) SetStakeProgramAccount(stakeProgram ag_solanago.PublicKey) *EraSkipBond {
-	inst.AccountMetaSlice[1] = ag_solanago.Meta(stakeProgram)
-	return inst
-}
-
-// GetStakeProgramAccount gets the "stakeProgram" account.
-func (inst *EraSkipBond) GetStakeProgramAccount() *ag_solanago.AccountMeta {
-	return inst.AccountMetaSlice.Get(1)
 }
 
 func (inst EraSkipBond) Build() *Instruction {
@@ -72,9 +59,6 @@ func (inst *EraSkipBond) Validate() error {
 		if inst.AccountMetaSlice[0] == nil {
 			return errors.New("accounts.StakeManager is not set")
 		}
-		if inst.AccountMetaSlice[1] == nil {
-			return errors.New("accounts.StakeProgram is not set")
-		}
 	}
 	return nil
 }
@@ -91,9 +75,8 @@ func (inst *EraSkipBond) EncodeToTree(parent ag_treeout.Branches) {
 					instructionBranch.Child("Params[len=0]").ParentFunc(func(paramsBranch ag_treeout.Branches) {})
 
 					// Accounts of the instruction:
-					instructionBranch.Child("Accounts[len=2]").ParentFunc(func(accountsBranch ag_treeout.Branches) {
+					instructionBranch.Child("Accounts[len=1]").ParentFunc(func(accountsBranch ag_treeout.Branches) {
 						accountsBranch.Child(ag_format.Meta("stakeManager", inst.AccountMetaSlice.Get(0)))
-						accountsBranch.Child(ag_format.Meta("stakeProgram", inst.AccountMetaSlice.Get(1)))
 					})
 				})
 		})
@@ -109,9 +92,7 @@ func (obj *EraSkipBond) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err er
 // NewEraSkipBondInstruction declares a new EraSkipBond instruction with the provided parameters and accounts.
 func NewEraSkipBondInstruction(
 	// Accounts:
-	stakeManager ag_solanago.PublicKey,
-	stakeProgram ag_solanago.PublicKey) *EraSkipBond {
+	stakeManager ag_solanago.PublicKey) *EraSkipBond {
 	return NewEraSkipBondInstructionBuilder().
-		SetStakeManagerAccount(stakeManager).
-		SetStakeProgramAccount(stakeProgram)
+		SetStakeManagerAccount(stakeManager)
 }

@@ -45,3 +45,4 @@ conf_main.*
 config_start.toml
 config_init_stack.toml
 config_init_stakemanager.toml
+config_set_stakemanager.toml
