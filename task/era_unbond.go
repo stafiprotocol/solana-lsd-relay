@@ -59,20 +59,11 @@ func (t *Task) EraUnbond(stakeManagerPubkey solana.PublicKey) error {
 	}
 
 	err = utils.SignAndSendTx(t.client, tx, utils.GetSignFunc(t.feePayerAccount, splitStakeAccount), latestBlockHashRes.Value.LastValidBlockHeight)
-	txHash := tx.Signatures[0].String()
-	logrus.Infof("EraUnbond send tx hash: %s, unbondAmount: %d", txHash, stakeManager.EraProcessData.NeedUnbond)
-	if err == nil {
-		logrus.Infof("EraUnbond success")
-		return nil
+	if err != nil {
+		return fmt.Errorf("EraUnbond failed err: %w", err)
 	}
+	logrus.Infof("EraUnbond send tx hash: %s, unbondAmount: %d", tx.Signatures[0].String(), stakeManager.EraProcessData.NeedUnbond)
+	logrus.Infof("EraUnbond success")
+	return nil
 
-	stakeManagerNew, _, getErr := t.getStakeManagerAndPool(stakeManagerPubkey)
-	if getErr != nil {
-		return getErr
-	} else if !stakeManagerNew.EraProcessData.IsNeedUnbond() {
-		logrus.Info("EraUnbond success")
-		return nil
-	}
-
-	return fmt.Errorf("EraUnbond failed err: %w", err)
 }

@@ -62,19 +62,11 @@ func (t *Task) EraWithdraw(stakeManagerPubkey solana.PublicKey) error {
 			return fmt.Errorf("new solana transaction error: %w", err)
 		}
 		err = utils.SignAndSendTx(t.client, tx, utils.GetSignFunc(t.feePayerAccount), latestBlockHashRes.Value.LastValidBlockHeight)
-		logrus.Infof("EraWithdraw send tx hash: %s, stakeAccount: %s", tx.Signatures[0], stakeAccount)
-		if err == nil {
-			logrus.Info("EraWithdraw success")
-			return nil
+		if err != nil {
+			return fmt.Errorf("EraWithdraw failed err: %w", err)
 		}
-
-		stakeAccountInfoNew := lsd_program.StakeAccount{}
-		if verifyErr := utils.GetAndDecodeAccountInfo(t.client, stakeAccount, &stakeAccountInfoNew); verifyErr != nil && verifyErr == rpc.ErrNotFound {
-			logrus.Info("EraWithdraw success")
-			return nil
-		}
-
-		return fmt.Errorf("EraWithdraw failed err: %w", err)
+		logrus.Infof("EraWithdraw send tx hash: %s, stakeAccount: %s", tx.Signatures[0].String(), stakeAccount)
+		logrus.Info("EraWithdraw success")
 	}
 
 	return nil

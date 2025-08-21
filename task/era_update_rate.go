@@ -113,12 +113,11 @@ func (t *Task) EraUpdateRate(stakeManagerPubkey solana.PublicKey) error {
 	}
 
 	err = utils.SignAndSendTx(t.client, tx, utils.GetSignFunc(t.feePayerAccount), latestBlockHashRes.Value.LastValidBlockHeight)
+	if err != nil {
+		return fmt.Errorf("EraUpdateRate failed err: %w", err)
+	}
 	logrus.Infof("EraUpdateRate send tx hash: %s, pipelineActive: %d, eraSnapshotActive: %d, eraProcessActive: %d, rate(old): %d",
 		tx.Signatures[0], stakeManager.Active, stakeManager.EraProcessData.OldActive, stakeManager.EraProcessData.NewActive, stakeManager.Rate)
-	if err == nil {
-		logrus.Info("EraUpdateActive success")
-		return nil
-	}
 
 	stakeManagerNew, _, verifyErr := t.getStakeManagerAndPool(stakeManagerPubkey)
 	if verifyErr != nil {
@@ -128,6 +127,5 @@ func (t *Task) EraUpdateRate(stakeManagerPubkey solana.PublicKey) error {
 		logrus.Infof("EraUpdateRate success, rate(new): %d", stakeManagerNew.Rate)
 		return nil
 	}
-
-	return fmt.Errorf("EraUpdateRate failed err: %w", err)
+	return nil
 }

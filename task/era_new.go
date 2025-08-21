@@ -43,23 +43,10 @@ func (t *Task) EraNew(stakeManagerPubkey solana.PublicKey) error {
 	}
 
 	err = utils.SignAndSendTx(t.client, tx, utils.GetSignFunc(t.feePayerAccount), latestBlockHashRes.Value.LastValidBlockHeight)
-	txHash := tx.Signatures[0].String()
-	logrus.Infof("EraNew send tx hash: %s, newEra: %d", txHash, stakeManager.LatestEra+1)
-	if err == nil {
-		logrus.Infof("EraNew success")
-		return nil
+	if err != nil {
+		return fmt.Errorf("EraNew failed err: %w", err)
 	}
-
-	// verify tx success
-	stakeManagerNew, _, getErr := t.getStakeManagerAndPool(stakeManagerPubkey)
-	if getErr != nil {
-		return getErr
-	}
-
-	if stakeManagerNew.LatestEra > stakeManager.LatestEra {
-		logrus.Infof("EraNew success")
-		return nil
-	}
-
-	return fmt.Errorf("EraNew failed err: %w", err)
+	logrus.Infof("EraNew send tx hash: %s, newEra: %d", tx.Signatures[0].String(), stakeManager.LatestEra+1)
+	logrus.Infof("EraNew success")
+	return nil
 }

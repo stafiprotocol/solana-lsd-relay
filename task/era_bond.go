@@ -55,22 +55,13 @@ func (t *Task) EraBond(stakeManagerPubkey solana.PublicKey) error {
 		return fmt.Errorf("NewTransaction failed, err: %s, tx: %s", err.Error(), tx.String())
 	}
 	signFunc := utils.GetSignFunc(t.feePayerAccount, stakeAccount)
-	if err = utils.SignAndSendTx(t.client, tx, signFunc, latestBlockHashRes.Value.LastValidBlockHeight); err != nil {
-		return fmt.Errorf("SignAndSendTx failed, err: %s", err.Error())
+	err = utils.SignAndSendTx(t.client, tx, signFunc, latestBlockHashRes.Value.LastValidBlockHeight)
+	if err != nil {
+		return fmt.Errorf("EraBond failed err: %w", err)
 	}
 
 	logrus.Infof("EraBond send tx hash: %s, stakeAccount: %s, bond: %d",
-		tx.Signatures[0], stakeAccount.PublicKey(), stakeManager.EraProcessData.NeedBond)
-
-	// verify tx success
-	stakeManagerNew, _, getErr := t.getStakeManagerAndPool(stakeManagerPubkey)
-	if getErr != nil {
-		return getErr
-	}
-	if !stakeManagerNew.EraProcessData.IsNeedBond(minDelegationAmount) {
-		logrus.Info("EraBond success")
-		return nil
-	}
-
-	return fmt.Errorf("EraBond failed err: %w", err)
+		tx.Signatures[0].String(), stakeAccount.PublicKey(), stakeManager.EraProcessData.NeedBond)
+	logrus.Info("EraBond success")
+	return nil
 }
