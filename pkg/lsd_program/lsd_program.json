@@ -706,11 +706,6 @@
           "name": "stakeManager",
           "isMut": true,
           "isSigner": false
-        },
-        {
-          "name": "stakeProgram",
-          "isMut": false,
-          "isSigner": false
         }
       ],
       "args": []
