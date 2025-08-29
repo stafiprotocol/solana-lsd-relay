@@ -112,6 +112,34 @@ func LoadSetStakeManagerConfig(configFilePath string) (*ConfigSetStakeManager, e
 	return &cfg, nil
 }
 
+type ConfigCreateMetadata struct {
+	Endpoint     string // rpc endpoint
+	KeystorePath string
+	ExportTx     bool
+
+	LsdProgramID        string
+	StakeManagerAddress string
+	StakePoolAddress    string
+	LsdTokenMintAddress string
+
+	FeePayerAccount string
+	AdminAccount    string
+
+	// Metadata parameters
+	TokenName   string
+	TokenSymbol string
+	TokenUri    string
+}
+
+func LoadCreateMetadataConfig(configFilePath string) (*ConfigCreateMetadata, error) {
+	var cfg = ConfigCreateMetadata{}
+	if err := loadConfigFromFile(configFilePath, &cfg); err != nil {
+		return nil, err
+	}
+
+	return &cfg, nil
+}
+
 func loadConfigFromFile(path string, config any) error {
 	_, err := os.Open(path)
 	if err != nil {

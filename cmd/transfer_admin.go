@@ -69,7 +69,7 @@ func stakeManagerTransferAdminCmd() *cobra.Command {
 				5,                       // limit of requests per time frame
 			))
 
-			_, err = adminExecuteInstructions("transfer balancer", rpcClient, []solana.Instruction{transferAdminInstruction}, cfg.KeystorePath, feePayerPubkey, adminPubkey, cfg.ExportTx)
+			_, err = adminExecuteInstructions("transfer admin", rpcClient, []solana.Instruction{transferAdminInstruction}, cfg.KeystorePath, feePayerPubkey, adminPubkey, cfg.ExportTx)
 			return err
 		},
 	}

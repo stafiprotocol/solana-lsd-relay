@@ -1,0 +1,16 @@
+Endpoint = "https://api.devnet.solana.com"
+KeystorePath = "./keys/solana_keys.json"
+ExportTx = true
+
+LsdProgramID = "795MBfkwwtAX4fWiFqZcJK8D91P9tqqtiSRrSNhBvGzq"
+StakeManagerAddress = "JAAGMA3nXSFq3QhSMC9Trkf5hneMGoGRLaGtEkmL1Nmj"
+StakePoolAddress = "3NCv41v4MTbNPw38yu2ZJFPcujmBDz1FnDA7AaiPPrwB"
+LsdTokenMintAddress = "7Ba9vKFt7ossKmQqxqm2UBLDKhc8sjYubqUH8d5k4iPa"
+
+FeePayerAccount = "H4NkEBvfmu4vMmNLejjRkh6ZxkcT6cYCbfhy9fkfAxTg"
+AdminAccount = "G5dUkRE6f7Z73aM4dkxzEreTYxjfanqzSSkYYjYCQRA4"
+
+# Metadata parameters
+TokenName = "Liquid Staking Token"
+TokenSymbol = "LST"
+TokenUri = "https://your-metadata-uri.com/token.json" 

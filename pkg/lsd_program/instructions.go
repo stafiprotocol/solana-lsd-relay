@@ -62,6 +62,8 @@ var (
 
 	Instruction_Redelegate = ag_binary.TypeID([8]byte{212, 82, 51, 160, 228, 80, 116, 35})
 
+	Instruction_CreateMetadataV1 = ag_binary.TypeID([8]byte{210, 189, 154, 15, 207, 149, 102, 45})
+
 	Instruction_Stake = ag_binary.TypeID([8]byte{206, 176, 202, 18, 200, 209, 179, 108})
 
 	Instruction_Unstake = ag_binary.TypeID([8]byte{90, 95, 107, 42, 205, 124, 50, 225})
@@ -122,6 +124,8 @@ func InstructionIDToName(id ag_binary.TypeID) string {
 		return "ReallocStakeManager"
 	case Instruction_Redelegate:
 		return "Redelegate"
+	case Instruction_CreateMetadataV1:
+		return "CreateMetadataV1"
 	case Instruction_Stake:
 		return "Stake"
 	case Instruction_Unstake:
@@ -214,6 +218,9 @@ var InstructionImplDef = ag_binary.NewVariantDefinition(
 		},
 		{
 			"redelegate", (*Redelegate)(nil),
+		},
+		{
+			"create_metadata_v1", (*CreateMetadataV1)(nil),
 		},
 		{
 			"stake", (*Stake)(nil),

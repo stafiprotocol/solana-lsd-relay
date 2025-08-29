@@ -7,6 +7,50 @@ import (
 	ag_solanago "github.com/gagliardetto/solana-go"
 )
 
+type CreateMetadataParams struct {
+	TokenName   string
+	TokenSymbol string
+	TokenUri    string
+}
+
+func (obj CreateMetadataParams) MarshalWithEncoder(encoder *ag_binary.Encoder) (err error) {
+	// Serialize `TokenName` param:
+	err = encoder.Encode(obj.TokenName)
+	if err != nil {
+		return err
+	}
+	// Serialize `TokenSymbol` param:
+	err = encoder.Encode(obj.TokenSymbol)
+	if err != nil {
+		return err
+	}
+	// Serialize `TokenUri` param:
+	err = encoder.Encode(obj.TokenUri)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (obj *CreateMetadataParams) UnmarshalWithDecoder(decoder *ag_binary.Decoder) (err error) {
+	// Deserialize `TokenName`:
+	err = decoder.Decode(&obj.TokenName)
+	if err != nil {
+		return err
+	}
+	// Deserialize `TokenSymbol`:
+	err = decoder.Decode(&obj.TokenSymbol)
+	if err != nil {
+		return err
+	}
+	// Deserialize `TokenUri`:
+	err = decoder.Decode(&obj.TokenUri)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 type EraProcessData struct {
 	NeedBond             uint64
 	NeedUnbond           uint64

@@ -86,6 +86,7 @@ func stakeManagerCmd() *cobra.Command {
 		stakeManagerTransferBalancerCmd(),
 		stakeManagerAddValidator(),
 		stakeManagerRemoveValidator(),
+		CreateTokenMetadataCmd(),
 	)
 	return cmd
 }
