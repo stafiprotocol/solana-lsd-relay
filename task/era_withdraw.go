@@ -19,16 +19,15 @@ func (t *Task) EraWithdraw(stakeManagerPubkey solana.PublicKey) error {
 
 	withdrawableAccounts := make([]solana.PublicKey, 0)
 	for _, account := range stakeManager.SplitAccounts {
-		accountInfo, err := t.client.GetStakeActivation(
+		accountInfo, err := utils.CalStakeActivation(
 			context.Background(),
+			t.client,
 			account,
-			rpc.CommitmentConfirmed,
-			nil,
 		)
 		if err != nil {
 			return err
 		}
-		if accountInfo.State == rpc.ActivationStateInactive {
+		if accountInfo.State == utils.StakeActivationStateInactive {
 			withdrawableAccounts = append(withdrawableAccounts, account)
 		}
 	}

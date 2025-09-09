@@ -23,16 +23,15 @@ func (t *Task) EraMerge(stakeManagerPubkey solana.PublicKey) error {
 
 	valToAccount := make(map[string]map[uint64][]solana.PublicKey) // voter -> credit -> []stakeAccount
 	for _, stakeAccount := range stakeManager.StakeAccounts {
-		accountInfo, err := t.client.GetStakeActivation(
+		accountInfo, err := utils.CalStakeActivation(
 			context.Background(),
+			t.client,
 			stakeAccount,
-			rpc.CommitmentConfirmed,
-			nil,
 		)
 		if err != nil {
 			return err
 		}
-		if accountInfo.State != rpc.ActivationStateActive {
+		if accountInfo.State != utils.StakeActivationStateActive {
 			continue
 		}
 

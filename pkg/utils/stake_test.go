@@ -168,3 +168,25 @@ func TestUnStake(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestCalStakeActivation(t *testing.T) {
+	endpoint := "https://api.mainnet-beta.solana.com"
+	rpcClient := rpc.NewWithCustomRPCClient(rpc.NewWithLimiter(
+		endpoint,
+		rate.Every(time.Second), // time frame
+		5,                       // limit of requests per time frame
+	))
+
+	stakeAccounts := []string{
+		"8uzkBgKn5NwFwqwbwwHaNUcRwb4D73BGmvn8zczuEyeF",
+		"FV3AgEGwA6mXrrRgaVeNaPASQwCHfVgm2nma1ehDgnfY",
+		"FV7q9oMEAzziqQrD51gMR1xt12MfHMEjvebyknVLNJLp"}
+	for _, address := range stakeAccounts {
+
+		res, err := utils.CalStakeActivation(context.Background(), rpcClient, solana.MustPublicKeyFromBase58(address))
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Logf("%+v", res)
+	}
+}
